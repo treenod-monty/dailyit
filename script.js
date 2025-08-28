@@ -956,8 +956,15 @@ function completeCircleSession() {
     saveUserData();
     updateUI();
     
-    // Show completion modal
-    showAddHabitModal();
+    // 습관에서 시작한 경우 습관 등록 모달 생략
+    if (currentSession.source === 'habit') {
+        // 습관에서 시작한 경우 바로 완료 처리
+        resetCircleSession();
+        showToast('습관 완료! 50포인트 획득! 🎉');
+    } else {
+        // 집중 타이머에서 시작한 경우만 습관 등록 모달 표시
+        showAddHabitModal();
+    }
 }
 
 function resetCircleSession() {
