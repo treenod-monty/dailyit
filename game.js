@@ -930,10 +930,7 @@ function updateCharacterPoints() {
     updateCharacterGachaPullButton();
 }
 
-// 메인 페이지용 가차 실행 (script.js에서 호출)
-async function performCharacterGachaPull() {
-    return await performGachaPull();
-}
+// 메인 페이지용 가차 실행은 script.js에서 처리 (중복 제거됨)
 
 // ========================================
 // 전역 함수들

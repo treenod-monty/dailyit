@@ -362,9 +362,9 @@ async function initializeApp() {
 // ========================================
 function setupEventListeners() {
     // Tab switching
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
         if (e.target.matches('.tab-btn')) {
-            switchTab(e.target.getAttribute('data-tab'));
+            await switchTab(e.target.getAttribute('data-tab'));
         }
     });
 
@@ -677,7 +677,7 @@ function cleanupModalCallbacks() {
 // ========================================
 // TAB MANAGEMENT
 // ========================================
-function switchTab(tabName) {
+async function switchTab(tabName) {
     // 타이머가 돌고 있으면 모든 탭 이동 차단
     if (currentSession && focusState === 'progress') {
         showToast('타이머가 돌아가는 중에는 다른 탭으로 이동할 수 없어요! 🕒');
@@ -704,7 +704,7 @@ function switchTab(tabName) {
     
     // Load characters when switching to characters tab
     if (tabName === 'characters') {
-        loadCharactersTab();
+        await loadCharactersTab();
     }
 }
 
@@ -2379,10 +2379,12 @@ function setupEditHabitEventListeners() {
 
 // 캐릭터 탭 로드
 async function loadCharactersTab() {
+    console.log('🎮 캐릭터 탭 로드 시작');
     try {
         // game.js의 캐릭터 관련 함수들 호출
         if (typeof loadCharacterGameData === 'function') {
             await loadCharacterGameData();
+            console.log('📦 캐릭터 게임 데이터 로드 완료');
         }
         if (typeof updateCharacterPoints === 'function') {
             updateCharacterPoints();
@@ -2581,13 +2583,24 @@ async function performCharacterGachaPull() {
         }
         
         await performGachaPull();
+        console.log('🎲 가차 실행 완료');
         
         // UI 업데이트
+        console.log('🔄 최종 UI 업데이트 시작');
         updateUI();
-        updateCharacterPoints();
-        updateCharacterGachaPullButton();
-        updateCharacterCollectionAndOwnedCounts();
-        updateCharacterCollectionMain();
+        if (typeof updateCharacterPoints === 'function') {
+            updateCharacterPoints();
+        }
+        if (typeof updateCharacterGachaPullButton === 'function') {
+            updateCharacterGachaPullButton();
+        }
+        if (typeof updateCharacterCollectionAndOwnedCounts === 'function') {
+            updateCharacterCollectionAndOwnedCounts();
+        }
+        if (typeof updateCharacterCollectionMain === 'function') {
+            updateCharacterCollectionMain();
+        }
+        console.log('🔄 최종 UI 업데이트 완료');
     }
 }
 
