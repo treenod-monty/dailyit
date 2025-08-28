@@ -279,6 +279,7 @@ window.DailytDB = null;
 // GLOBAL VARIABLES AND CONSTANTS
 // ========================================
 let currentSession = null;
+let completedSessionData = null; // 완료된 세션 데이터 저장용
 let userPoints = 0;
 let currentPartner = null;
 let timerInterval = null;
@@ -1067,7 +1068,17 @@ async function completeCircleSession() {
         showToast('습관 완료! 50포인트 획득! 🎉');
     } else {
         // 집중 타이머에서 시작한 경우만 습관 등록 모달 표시
-        showAddHabitModal();
+        // currentSession 정보를 미리 저장
+        completedSessionData = {
+            goal: currentSession.goal,
+            duration: currentSession.duration,
+            durationMinutes: Math.floor(currentSession.duration / 60)
+        };
+        
+        // 완료 메시지 표시 후 약간의 딜레이를 두고 모달 표시
+        setTimeout(() => {
+            showAddHabitModalWithData(completedSessionData.goal, completedSessionData.durationMinutes);
+        }, 1500); // 1.5초 후 모달 표시
     }
 }
 
@@ -1085,6 +1096,7 @@ function resetCircleSession() {
     }
     
     currentSession = null;
+    completedSessionData = null; // 완료된 세션 데이터도 초기화
     resetFocusState();
 }
 
@@ -1760,12 +1772,24 @@ function getDefaultEncouragementMessage(characterType, context) {
 // HABIT ADDITION MODAL
 // ========================================
 function showAddHabitModal() {
-    if (!currentSession) return;
+    if (!currentSession) {
+        return;
+    }
     
     // Pre-fill habit name based on goal
     const habitModalName = document.getElementById('habitModalName');
     if (habitModalName) {
         habitModalName.value = currentSession.goal;
+    }
+    
+    showModal('addHabitModal');
+}
+
+function showAddHabitModalWithData(goal, duration) {
+    // Pre-fill habit name based on goal
+    const habitModalName = document.getElementById('habitModalName');
+    if (habitModalName) {
+        habitModalName.value = goal;
     }
     
     showModal('addHabitModal');
@@ -1781,7 +1805,7 @@ async function confirmAddHabit() {
     }
     
     const cadence = activeCadence?.getAttribute('data-cadence') || 'daily';
-    const defaultTime = currentSession ? Math.floor(currentSession.duration / 60) : 60;
+    const defaultTime = completedSessionData ? completedSessionData.durationMinutes : 60;
     
     // Create new habit
     const newHabit = {
@@ -1796,13 +1820,15 @@ async function confirmAddHabit() {
         if (window.DailytDB) {
             // IndexedDB에 저장
             await window.DailytDB.addHabit(newHabit);
-            // 세션 기록도 추가
-            await window.DailytDB.addSession({
-                habitId: newHabit.id,
-                goal: currentSession.goal,
-                duration: currentSession.duration,
-                points: 50
-            });
+            // 세션 기록도 추가 (completedSessionData 사용)
+            if (completedSessionData) {
+                await window.DailytDB.addSession({
+                    habitId: newHabit.id,
+                    goal: completedSessionData.goal,
+                    duration: completedSessionData.duration,
+                    points: 50
+                });
+            }
             console.log('집중 세션에서 습관 생성 완료');
         } else {
             // 폴백: DailytDB 없으면 습관 기능 비활성화
