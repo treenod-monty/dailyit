@@ -457,6 +457,13 @@ async function performGachaPull() {
     
     // 랜덤 캐릭터 뽑기
     const result = drawRandomCharacter();
+    
+    if (!result) {
+        console.log('🎉 모든 캐릭터를 보유하여 더 이상 뽑을 수 없습니다');
+        showToast('🎉 모든 캐릭터를 수집 완료했습니다!');
+        return null;
+    }
+    
     console.log('🎯 뽑힌 캐릭터:', result.character.name, '레어도:', result.character.rarity);
     
     // 캐릭터 추가
@@ -507,6 +514,22 @@ async function performGachaPull() {
 
 // 랜덤 캐릭터 뽑기 로직
 function drawRandomCharacter() {
+    // 이미 보유한 캐릭터 타입 목록
+    const ownedCharacterTypes = appState.gacha.characters.map(char => char.type);
+    console.log('🎯 현재 보유 캐릭터 타입:', ownedCharacterTypes);
+    
+    // 보유하지 않은 캐릭터들만 필터링
+    const unownedCharacters = Object.values(characterDatabase).filter(char => 
+        !ownedCharacterTypes.includes(char.id)
+    );
+    
+    console.log('🆕 뽑을 수 있는 캐릭터 수:', unownedCharacters.length);
+    
+    if (unownedCharacters.length === 0) {
+        console.log('🎉 모든 캐릭터를 보유하고 있습니다!');
+        return null; // 더 이상 뽑을 캐릭터가 없음
+    }
+    
     const random = Math.random();
     let selectedRarity = 'common';
     
@@ -516,8 +539,14 @@ function drawRandomCharacter() {
         selectedRarity = 'rare';
     }
     
-    // 해당 희귀도의 캐릭터들 필터링
-    const charactersOfRarity = Object.values(characterDatabase).filter(char => char.rarity === selectedRarity);
+    // 해당 희귀도의 미보유 캐릭터들 필터링
+    let charactersOfRarity = unownedCharacters.filter(char => char.rarity === selectedRarity);
+    
+    // 해당 희귀도에 미보유 캐릭터가 없으면 다른 희귀도에서 선택
+    if (charactersOfRarity.length === 0) {
+        console.log(`⚠️ ${selectedRarity} 등급에 미보유 캐릭터가 없어 전체 미보유 캐릭터에서 선택`);
+        charactersOfRarity = unownedCharacters;
+    }
     
     // 랜덤 선택
     const randomCharacter = charactersOfRarity[Math.floor(Math.random() * charactersOfRarity.length)];
@@ -684,6 +713,13 @@ function updateCharacterCollectionMain() {
     }).join('');
 }
 
+// 모든 캐릭터를 보유했는지 확인
+function isAllCharactersOwned() {
+    const totalCharacters = Object.keys(characterDatabase).length;
+    const ownedCharacters = appState.gacha.characters.length;
+    return ownedCharacters >= totalCharacters;
+}
+
 // 메인 페이지 가차 버튼 업데이트
 function updateCharacterGachaPullButton() {
     const gachaPullBtn = document.getElementById('characterGachaPull');
@@ -693,15 +729,30 @@ function updateCharacterGachaPullButton() {
     const points = typeof userPoints !== 'undefined' ? userPoints : 0;
     
     if (gachaBtnText && gachaPullBtn) {
-        // 항상 "캐릭터 뽑기"로 고정
-        gachaBtnText.textContent = '캐릭터 뽑기';
+        const allCharactersOwned = isAllCharactersOwned();
         
-        if (points >= 150) {
+        if (allCharactersOwned) {
+            // 모든 캐릭터를 보유한 경우
+            gachaBtnText.textContent = '다음에 만나요';
+            gachaPullBtn.classList.remove('active');
+            gachaPullBtn.disabled = true;
+            gachaPullBtn.style.opacity = '0.5';
+            gachaPullBtn.style.cursor = 'not-allowed';
+            console.log('🎉 모든 캐릭터 보유 완료 - 버튼 비활성화');
+        } else if (points >= 150) {
+            // 포인트가 충분한 경우
+            gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.add('active');
             gachaPullBtn.disabled = false;
+            gachaPullBtn.style.opacity = '1';
+            gachaPullBtn.style.cursor = 'pointer';
         } else {
+            // 포인트가 부족한 경우
+            gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.remove('active');
-            gachaPullBtn.disabled = false; // disabled를 false로 변경하여 클릭 가능하게 함
+            gachaPullBtn.disabled = false; // 클릭 가능하게 하여 부족 메시지 표시
+            gachaPullBtn.style.opacity = '1';
+            gachaPullBtn.style.cursor = 'pointer';
         }
     }
 }

@@ -2425,6 +2425,14 @@ function setupCharacterGachaButton() {
         // 새 이벤트 리스너 추가
         document.getElementById('characterGachaPull').addEventListener('click', async function() {
             console.log('🖱️ 캐릭터 뽑기 버튼 클릭됨');
+            
+            // 모든 캐릭터를 보유했는지 확인
+            if (typeof isAllCharactersOwned === 'function' && isAllCharactersOwned()) {
+                console.log('🎉 모든 캐릭터 보유 완료 - 클릭 무시');
+                showToast('🎉 모든 캐릭터를 수집 완료했습니다!');
+                return;
+            }
+            
             const points = userPoints;
             console.log('💰 현재 포인트:', points);
             
@@ -2590,7 +2598,15 @@ async function performCharacterGachaPull() {
             appState.timer.points = userPoints;
         }
         
-        await performGachaPull();
+        const gachaResult = await performGachaPull();
+        
+        if (gachaResult === null) {
+            // 모든 캐릭터를 보유한 경우 포인트 복구
+            console.log('💰 모든 캐릭터 보유로 인한 포인트 복구');
+            userPoints += 150;
+            await saveUserData();
+        }
+        
         console.log('🎲 가차 실행 완료');
         
         // UI 업데이트
