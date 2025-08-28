@@ -2718,6 +2718,16 @@ window.DailytDevTools = {
                 마지막백업: data.exportedAt
             });
         }
+    },
+    
+    // 코스튬 해금 (개발용)
+    unlockCostumes: async () => {
+        if (typeof unlockAllCostumesForOwnedCharacters === 'function') {
+            await unlockAllCostumesForOwnedCharacters();
+            console.log('✅ 모든 보유 캐릭터의 코스튬 해금 완료');
+        } else {
+            console.log('❌ unlockAllCostumesForOwnedCharacters 함수를 찾을 수 없습니다');
+        }
     }
 };
 
@@ -3144,7 +3154,7 @@ function setupCharacterGachaButton() {
             const points = userPoints;
             console.log('💰 현재 포인트:', points);
             
-            if (points >= 150) {
+            if (points >= 100) {
                 // 포인트가 충분하면 가차 실행
                 console.log('✅ 포인트 충분, 가차 실행');
                 if (typeof performCharacterGachaPull === 'function') {
@@ -3154,7 +3164,7 @@ function setupCharacterGachaButton() {
                 }
             } else {
                 // 포인트 부족하면 토스트 표시
-                const needed = 150 - points;
+                const needed = 100 - points;
                 console.log('❌ 포인트 부족:', needed, '포인트 필요');
                 showToast(`${needed} 포인트가 부족해`);
             }
@@ -3280,14 +3290,14 @@ function selectCharacterFromCollectionMain(characterType, isOwned) {
 async function performCharacterGachaPull() {
     console.log('🎯 캐릭터 뽑기 시작 - 현재 포인트:', userPoints);
     
-    if (userPoints < 150) {
+    if (userPoints < 100) {
         showToast('포인트가 부족해요! 더 많은 활동을 해보세요! 💪');
         return;
     }
     
     // 포인트 차감 전 상태 로깅
     console.log('💰 포인트 차감 전:', userPoints);
-    userPoints -= 150;
+    userPoints -= 100;
     console.log('💰 포인트 차감 후:', userPoints);
     
     // 사용자 데이터 저장

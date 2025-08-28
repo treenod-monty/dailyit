@@ -28,7 +28,7 @@ const characterDatabase = {
             flowers: {
                 id: 'flowers',
                 name: '꽃',
-                image: './images/costumes/pokota/flowers.png',
+                image: './images/costumes/pokota/pokota_flowers.png',
                 rarity: 'rare'
             }
         }
@@ -51,13 +51,13 @@ const characterDatabase = {
             summer: {
                 id: 'summer',
                 name: '여름',
-                image: './images/costumes/bray/summer.png',
+                image: './images/costumes/bray/bray_ summer.png',
                 rarity: 'rare'
             },
             flowers: {
                 id: 'flowers',
                 name: '꽃',
-                image: './images/costumes/bray/flowers.png',
+                image: './images/costumes/bray/bray_flowers.png',
                 rarity: 'rare'
             }
         }
@@ -80,19 +80,19 @@ const characterDatabase = {
             flowers: {
                 id: 'flowers',
                 name: '꽃',
-                image: './images/costumes/coco/flowers.png',
+                image: './images/costumes/coco/coco_ flowers.png',
                 rarity: 'rare'
             },
             halloween: {
                 id: 'halloween',
                 name: '할로윈',
-                image: './images/costumes/coco/halloween.png',
+                image: './images/costumes/coco/coco_ halloween.png',
                 rarity: 'epic'
             },
             summer: {
                 id: 'summer',
                 name: '여름',
-                image: './images/costumes/coco/summer.png',
+                image: './images/costumes/coco/coco_summer.png',
                 rarity: 'rare'
             }
         }
@@ -189,19 +189,19 @@ const characterDatabase = {
             halloween: {
                 id: 'halloween',
                 name: '할로윈',
-                image: './images/costumes/obis/halloween.png',
+                image: './images/costumes/obis/obis_ halloween .png',
                 rarity: 'epic'
             },
             flowers: {
                 id: 'flowers',
                 name: '꽃',
-                image: './images/costumes/obis/flowers.png',
+                image: './images/costumes/obis/obis_flowers.png',
                 rarity: 'rare'
             },
             summer: {
                 id: 'summer',
                 name: '여름',
-                image: './images/costumes/obis/summer.png',
+                image: './images/costumes/obis/obis_summer.png',
                 rarity: 'rare'
             }
         }
@@ -501,6 +501,45 @@ async function ensurePokotaOwned() {
     }
 }
 
+// 기존 보유 캐릭터에게 모든 코스튬 자동 해금
+async function unlockAllCostumesForOwnedCharacters() {
+    console.log('🎨 기존 캐릭터들의 모든 코스튬 해금 시작');
+    
+    // 보유중인 캐릭터 타입들 추출
+    const ownedCharacterTypes = [...new Set(appState.gacha.characters.map(char => char.type))];
+    
+    let unlocked = false;
+    for (const characterType of ownedCharacterTypes) {
+        const character = characterDatabase[characterType];
+        if (!character) continue;
+        
+        // 해당 캐릭터의 ownedCostumes 초기화
+        if (!appState.gacha.ownedCostumes[characterType]) {
+            appState.gacha.ownedCostumes[characterType] = [];
+        }
+        
+        // characterDatabase에 있는 모든 코스튬을 ownedCostumes에 추가
+        const availableCostumes = Object.keys(character.costumes);
+        for (const costumeId of availableCostumes) {
+            if (!appState.gacha.ownedCostumes[characterType].includes(costumeId)) {
+                appState.gacha.ownedCostumes[characterType].push(costumeId);
+                console.log(`🎨 ${character.name}에게 ${character.costumes[costumeId].name} 코스튬 해금`);
+                unlocked = true;
+            }
+        }
+    }
+    
+    if (unlocked) {
+        await saveGameData();
+        console.log('🎨 코스튬 해금 완료 및 저장');
+        
+        // UI 업데이트
+        updateCharacterCollectionMain();
+        
+        showToast('새로운 코스튬들이 해금되었습니다! 🎨');
+    }
+}
+
 // ========================================
 // 가차 시스템
 // ========================================
@@ -793,7 +832,7 @@ function updateCharacterGachaPullButton() {
             gachaPullBtn.style.opacity = '0.5';
             gachaPullBtn.style.cursor = 'not-allowed';
             console.log('🎉 모든 캐릭터 보유 완료 - 버튼 비활성화');
-        } else if (points >= 150) {
+        } else if (points >= 100) {
             // 포인트가 충분한 경우
             gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.add('active');
@@ -1032,6 +1071,7 @@ function createExplosion(container, x, y, color) {
 async function loadCharacterGameData() {
     await loadGameData();
     await ensurePokotaOwned(); // 포코타 보유 확인만 실행 (초기화 제거)
+    await unlockAllCostumesForOwnedCharacters(); // 기존 캐릭터들의 코스튬 자동 해금
 }
 
 function updateCharacterPoints() {

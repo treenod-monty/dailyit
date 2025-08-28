@@ -2509,9 +2509,11 @@ body.modal-open {
     border-radius: 20px;
     max-width: 600px;
     width: 90%;
-    max-height: 80vh;
+    max-height: 85vh;
     overflow: hidden;
     animation: modalFadeIn 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border: none;
 }
 
 .character-modal-header {
@@ -2520,14 +2522,19 @@ body.modal-open {
     align-items: center;
     padding: 25px 30px;
     border-bottom: 1px solid #e1e8ed;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #FF8A65 0%, #FF7043 100%);
     color: white;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 2px 10px rgba(255, 138, 101, 0.3);
 }
 
 .character-modal-header h3 {
     font-size: 20px;
     font-weight: 700;
     margin: 0;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .character-modal-close {
@@ -2542,6 +2549,10 @@ body.modal-open {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.character-modal-close:hover {
+    opacity: 0.7;
 }
 
 .character-modal-close:hover {
@@ -3719,6 +3730,60 @@ body.modal-open {
     box-shadow: 0 2px 8px rgba(255, 138, 101, 0.3);
 }
 
+/* Costume Collection Summary */
+.costume-collection-summary {
+    padding: 25px 30px;
+    background: linear-gradient(135deg, rgba(255, 138, 101, 0.08) 0%, rgba(255, 112, 67, 0.05) 100%);
+    border-bottom: 1px solid rgba(255, 138, 101, 0.15);
+}
+
+.costume-collection-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+#currentCostumeCharacterName {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FF8A65;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+#availableCostumesCount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #FF8A65;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+/* Enhanced costume options grid */
+.costume-collection-grid {
+    padding: 20px 30px;
+    background: white;
+}
+
+.costume-collection-grid .costume-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+}
+
 /* Mobile responsive */
 @media (max-width: 480px) {
     .costume-options-grid {
@@ -3743,6 +3808,29 @@ body.modal-open {
     .costume-selected-badge {
         font-size: 10px;
         padding: 2px 6px;
+    }
+    
+    .costume-collection-summary {
+        padding: 15px 20px;
+    }
+    
+    .costume-collection-stats {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .stat-item {
+        justify-content: space-between;
+    }
+    
+    .costume-collection-grid {
+        padding: 15px 20px;
+    }
+    
+    .costume-collection-grid .costume-options-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
     }
 }
 
