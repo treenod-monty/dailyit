@@ -3645,3 +3645,104 @@ body.modal-open {
     }
 }
 
+/* =============================================================================
+   COSTUME MODAL STYLES
+   ============================================================================= */
+
+.costume-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.costume-option {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.costume-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-color: #FF8A65;
+}
+
+.costume-option.selected {
+    border-color: #FF8A65;
+    background: linear-gradient(135deg, rgba(255, 138, 101, 0.1) 0%, rgba(255, 138, 101, 0.05) 100%);
+    box-shadow: 0 4px 15px rgba(255, 138, 101, 0.2);
+}
+
+.costume-image {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.costume-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.costume-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    margin-bottom: 5px;
+}
+
+.costume-selected-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #FF8A65 0%, #FF7043 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(255, 138, 101, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    .costume-options-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+    }
+    
+    .costume-option {
+        padding: 10px;
+    }
+    
+    .costume-image {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 8px;
+    }
+    
+    .costume-name {
+        font-size: 12px;
+    }
+    
+    .costume-selected-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}
+

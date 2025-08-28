@@ -24,6 +24,12 @@ const characterDatabase = {
                 name: '여름',
                 image: './images/costumes/pokota/summer.png',
                 rarity: 'rare'
+            },
+            flowers: {
+                id: 'flowers',
+                name: '꽃',
+                image: './images/costumes/pokota/flowers.png',
+                rarity: 'rare'
             }
         }
     },
@@ -41,6 +47,18 @@ const characterDatabase = {
                 name: '기본',
                 image: './images/costumes/bray/default.png',
                 rarity: 'common'
+            },
+            summer: {
+                id: 'summer',
+                name: '여름',
+                image: './images/costumes/bray/summer.png',
+                rarity: 'rare'
+            },
+            flowers: {
+                id: 'flowers',
+                name: '꽃',
+                image: './images/costumes/bray/flowers.png',
+                rarity: 'rare'
             }
         }
     },
@@ -58,6 +76,24 @@ const characterDatabase = {
                 name: '기본',
                 image: './images/costumes/coco/default.png',
                 rarity: 'common'
+            },
+            flowers: {
+                id: 'flowers',
+                name: '꽃',
+                image: './images/costumes/coco/flowers.png',
+                rarity: 'rare'
+            },
+            halloween: {
+                id: 'halloween',
+                name: '할로윈',
+                image: './images/costumes/coco/halloween.png',
+                rarity: 'epic'
+            },
+            summer: {
+                id: 'summer',
+                name: '여름',
+                image: './images/costumes/coco/summer.png',
+                rarity: 'rare'
             }
         }
     },
@@ -149,6 +185,24 @@ const characterDatabase = {
                 name: '기본',
                 image: './images/costumes/obis/default.png',
                 rarity: 'common'
+            },
+            halloween: {
+                id: 'halloween',
+                name: '할로윈',
+                image: './images/costumes/obis/halloween.png',
+                rarity: 'epic'
+            },
+            flowers: {
+                id: 'flowers',
+                name: '꽃',
+                image: './images/costumes/obis/flowers.png',
+                rarity: 'rare'
+            },
+            summer: {
+                id: 'summer',
+                name: '여름',
+                image: './images/costumes/obis/summer.png',
+                rarity: 'rare'
             }
         }
     },
