@@ -1988,6 +1988,31 @@ window.DailytDevTools = {
         }
     },
     
+    // 테스트용: 포인트 추가
+    addPoints: (amount = 1500) => {
+        userPoints += amount;
+        saveUserData();
+        updateUI();
+        console.log(`💰 ${amount} 포인트 추가됨 (총: ${userPoints})`);
+    },
+    
+    // 테스트용: 전체 캐릭터 수집 완료 상태 확인
+    checkComplete: () => {
+        if (typeof isAllCharactersOwned === 'function') {
+            const isComplete = isAllCharactersOwned();
+            const totalCharacters = typeof characterDatabase !== 'undefined' ? Object.keys(characterDatabase).length : 'unknown';
+            const ownedCount = typeof appState !== 'undefined' ? appState.gacha.characters.length : 'unknown';
+            
+            console.log('📊 수집 현황:');
+            console.log(`- 보유 캐릭터: ${ownedCount}개`);
+            console.log(`- 전체 캐릭터: ${totalCharacters}개`);
+            console.log(`- 수집 완료: ${isComplete ? '✅' : '❌'}`);
+            
+            return isComplete;
+        }
+        return false;
+    },
+    
     clearAll: async () => {
         if (window.DailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
             const habits = await window.DailytDB.getHabits();
