@@ -911,7 +911,8 @@ function startCircleTimer() {
         remainingTime: durationInSeconds,
         startTime: Date.now(),
         isPaused: false,
-        source: 'circle'
+        source: 'circle',
+        stopAttempted: false
     };
     
     // Switch to progress state
@@ -1004,15 +1005,39 @@ async function pauseCircleTimer() {
 async function stopCircleTimer() {
     if (!currentSession) return;
     
-    // 정지 시도 시 캐릭터 메시지 표시 (포기 만류)
-    await showStopAttemptMessage();
+    // 첫 번째 정지 시도인지 확인
+    if (!currentSession.stopAttempted) {
+        // 첫 번째 시도: 포기 만류 메시지 표시
+        currentSession.stopAttempted = true;
+        await showStopAttemptMessage();
+        
+        // 정지 버튼 텍스트 변경
+        const stopBtn = document.getElementById('stopTimerBtn');
+        if (stopBtn) {
+            stopBtn.innerHTML = '<i data-lucide="square"></i> 정말 정지';
+            if (window.lucide) window.lucide.createIcons();
+        }
+        
+        return; // 여기서 함수 종료, 실제 정지는 하지 않음
+    }
     
+    // 두 번째 시도: 실제 정지 확인 모달 표시
     showConfirmModal(
         '세션 종료',
         '정말로 세션을 종료하시겠습니까?\n진행된 내용은 저장되지 않습니다.'
     ).then((confirmed) => {
         if (confirmed) {
             resetCircleSession();
+        } else {
+            // 취소 시 stopAttempted 플래그 초기화하고 버튼 텍스트 복원
+            if (currentSession) {
+                currentSession.stopAttempted = false;
+                const stopBtn = document.getElementById('stopTimerBtn');
+                if (stopBtn) {
+                    stopBtn.innerHTML = '<i data-lucide="square"></i> 정지';
+                    if (window.lucide) window.lucide.createIcons();
+                }
+            }
         }
     });
 }
@@ -1050,6 +1075,13 @@ function resetCircleSession() {
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
+    }
+    
+    // 정지 버튼 텍스트 초기화
+    const stopBtn = document.getElementById('stopTimerBtn');
+    if (stopBtn) {
+        stopBtn.innerHTML = '<i data-lucide="square"></i> 정지';
+        if (window.lucide) window.lucide.createIcons();
     }
     
     currentSession = null;
@@ -2179,7 +2211,8 @@ function startHabitFromList(habitId) {
         startTime: Date.now(),
         isPaused: false,
         source: 'habit',
-        habitId: habitId
+        habitId: habitId,
+        stopAttempted: false
     };
     
     // Switch to focus tab and show progress
