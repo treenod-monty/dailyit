@@ -437,9 +437,16 @@ function setupEventListeners() {
     // 모달 관련 이벤트들
     setupModalEvents();
     
-    // Custom minutes input change (for circle timer)
-    document.getElementById('customMinutes')?.addEventListener('input', function() {
+    // Custom time input change (for circle timer)
+    document.getElementById('customTimeValue')?.addEventListener('input', function() {
         updateCircleStartButton();
+    });
+    
+    // Time unit toggle buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.unit-btn')) {
+            toggleTimeUnit(e.target);
+        }
     });
     
     
@@ -723,18 +730,32 @@ function resetFocusState() {
     // Reset all inputs
     const circleGoalInput = document.getElementById('circleGoalInput');
     const customTimeInput = document.getElementById('customTimeInput');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     const startTimerBtn = document.getElementById('startTimerBtn');
     
     if (circleGoalInput) circleGoalInput.value = '';
     if (customTimeInput) customTimeInput.style.display = 'none';
-    if (customMinutes) customMinutes.value = '';
+    if (customTimeValue) customTimeValue.value = '';
     if (startTimerBtn) startTimerBtn.disabled = true;
     
     // Reset time chips
     document.querySelectorAll('.time-chip').forEach(chip => chip.classList.remove('active'));
     const defaultChip = document.querySelector('.time-chip[data-time="60"]');
     if (defaultChip) defaultChip.classList.add('active');
+    
+    // Reset unit toggle to minutes
+    document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
+    const minutesBtn = document.querySelector('.unit-btn[data-unit="minutes"]');
+    if (minutesBtn) {
+        minutesBtn.classList.add('active');
+        const unitLabel = document.getElementById('customTimeUnit');
+        const timeInput = document.getElementById('customTimeValue');
+        if (unitLabel) unitLabel.textContent = '분';
+        if (timeInput) {
+            timeInput.setAttribute('max', '300');
+            timeInput.setAttribute('placeholder', '분');
+        }
+    }
 }
 
 function onCircleTap() {
@@ -764,11 +785,45 @@ function selectTimeChip(chip) {
     if (chip.getAttribute('data-time') === 'custom') {
         if (customTimeInput) customTimeInput.style.display = 'block';
         setTimeout(() => {
-            const customMinutes = document.getElementById('customMinutes');
-            if (customMinutes) customMinutes.focus();
+            const customTimeValue = document.getElementById('customTimeValue');
+            if (customTimeValue) customTimeValue.focus();
         }, 100);
     } else {
         if (customTimeInput) customTimeInput.style.display = 'none';
+    }
+    
+    updateCircleStartButton();
+}
+
+function toggleTimeUnit(button) {
+    const container = button.closest('.time-unit-toggle');
+    if (!container) return;
+    
+    // Remove active from all unit buttons
+    container.querySelectorAll('.unit-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active to clicked button
+    button.classList.add('active');
+    
+    // Update unit label and input constraints
+    const unit = button.getAttribute('data-unit');
+    const unitLabel = document.getElementById('customTimeUnit');
+    const timeInput = document.getElementById('customTimeValue');
+    
+    if (unit === 'minutes') {
+        if (unitLabel) unitLabel.textContent = '분';
+        if (timeInput) {
+            timeInput.setAttribute('max', '300'); // 5시간까지
+            timeInput.setAttribute('placeholder', '분');
+        }
+    } else if (unit === 'seconds') {
+        if (unitLabel) unitLabel.textContent = '초';
+        if (timeInput) {
+            timeInput.setAttribute('max', '3600'); // 1시간까지
+            timeInput.setAttribute('placeholder', '초');
+        }
     }
     
     updateCircleStartButton();
@@ -794,7 +849,7 @@ function updateCircleStartButton() {
     const goalInput = document.getElementById('circleGoalInput');
     const startBtn = document.getElementById('startTimerBtn');
     const activeChip = document.querySelector('.time-chip.active');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     
     if (!goalInput || !startBtn) return;
     
@@ -804,7 +859,7 @@ function updateCircleStartButton() {
     if (activeChip) {
         const timeValue = activeChip.getAttribute('data-time');
         if (timeValue === 'custom') {
-            hasValidTime = customMinutes && customMinutes.value && parseInt(customMinutes.value) > 0;
+            hasValidTime = customTimeValue && customTimeValue.value && parseInt(customTimeValue.value) > 0;
         } else {
             hasValidTime = true;
         }
@@ -816,27 +871,34 @@ function updateCircleStartButton() {
 function startCircleTimer() {
     const goalInput = document.getElementById('circleGoalInput');
     const activeChip = document.querySelector('.time-chip.active');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     
     if (!goalInput || !activeChip) return;
     
     const goal = goalInput.value.trim();
-    let duration;
+    let durationInSeconds;
     
     const timeValue = activeChip.getAttribute('data-time');
     if (timeValue === 'custom') {
-        duration = parseInt(customMinutes.value);
+        const inputValue = parseInt(customTimeValue.value);
+        const activeUnit = document.querySelector('.unit-btn.active');
+        const unit = activeUnit ? activeUnit.getAttribute('data-unit') : 'minutes';
+        
+        if (unit === 'seconds') {
+            durationInSeconds = inputValue;
+        } else {
+            durationInSeconds = inputValue * 60; // 분을 초로 변환
+        }
     } else {
-        duration = parseFloat(timeValue);
+        durationInSeconds = parseFloat(timeValue) * 60; // 분을 초로 변환
     }
     
-    if (!goal || !duration || duration <= 0) {
+    if (!goal || !durationInSeconds || durationInSeconds <= 0) {
         showAlertModal('오류', '목표를 입력해줘 / 세션 시간을 선택해줘');
         return;
     }
     
-    // Create session (duration is in minutes, convert to seconds)
-    const durationInSeconds = Math.round(duration * 60);
+    // Create session
     currentSession = {
         goal: goal,
         duration: durationInSeconds,
@@ -2453,18 +2515,18 @@ function selectHabitForFocus(habit) {
         }
     } else {
         // 일치하는 시간 칩이 없으면 직접입력 사용
-        const customTimeBtn = document.getElementById('customTimeBtn');
+        const customTimeChip = document.querySelector('.time-chip[data-time="custom"]');
         const customTimeInput = document.getElementById('customTimeInput');
-        const customMinutes = document.getElementById('customMinutes');
+        const customTimeValue = document.getElementById('customTimeValue');
         
-        if (customTimeBtn) {
-            customTimeBtn.classList.add('active');
+        if (customTimeChip) {
+            customTimeChip.classList.add('active');
         }
         if (customTimeInput) {
             customTimeInput.style.display = 'block';
         }
-        if (customMinutes) {
-            customMinutes.value = habit.defaultTime;
+        if (customTimeValue) {
+            customTimeValue.value = habit.defaultTime;
         }
     }
     
