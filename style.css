@@ -65,7 +65,6 @@ body {
     background: white;
     min-height: 100vh;
     line-height: 1.5;
-    min-width: 480px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -82,6 +81,8 @@ body.modal-open {
     padding-right: 20px;
     padding-bottom: 20px;
     min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* ========================================
@@ -1684,10 +1685,19 @@ body.modal-open {
     }
     
     /* Habit List Responsive */
+    .habits-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    
     .habit-item {
         padding: 18px;
         flex-direction: row;
         align-items: center;
+        width: 100%;
+        max-width: 100%;
     }
     
     .habit-actions {
@@ -1742,9 +1752,17 @@ body.modal-open {
 
 /* Mobile: 480px and below */
 @media (max-width: 480px) {
+    body {
+        text-align: center;
+    }
+    
     .container {
         padding-left: 15px;
         padding-right: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
     }
     
     .header {
@@ -1763,11 +1781,19 @@ body.modal-open {
     .tab-section, .partners-section {
         padding: 25px 20px;
         border-radius: 12px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .tab-nav {
+        justify-content: center;
+        width: 100%;
     }
     
     .tab-btn {
         padding: 12px 16px;
         font-size: 14px;
+        min-width: 80px;
     }
     
     /* Focus Circle Mobile */
@@ -3271,10 +3297,15 @@ body.modal-open {
     .character-collection-grid {
         grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
         gap: 8px;
+        width: 100%;
+        justify-content: center;
+        display: grid;
+        justify-items: center;
     }
     
     .character-card-main {
         padding: 10px;
+        margin: 0 auto;
     }
     
     .character-image-main {
