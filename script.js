@@ -1084,11 +1084,19 @@ async function completeCircleSession() {
         
         console.log('📝 습관 등록 모달 표시를 위한 데이터 저장:', completedSessionData);
         
-        // 완료 메시지 표시 후 약간의 딜레이를 두고 모달 표시
+        // showCompleteMessage가 완전히 끝난 후 충분한 딜레이를 두고 모달 표시
         setTimeout(() => {
             console.log('⏰ 1.5초 딜레이 후 습관 등록 모달 표시 시도');
+            console.log('🧹 모달 표시 전 세션 상태 정리');
+            // 모달 표시 전에 타이머 상태 정리 (UI 충돌 방지)
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            resetFocusState(); // 포커스 상태만 먼저 정리
+            currentSession = null; // 세션 상태 정리 (중복 호출 방지)
             showAddHabitModalWithData(completedSessionData.goal, completedSessionData.durationMinutes);
-        }, 1500); // 1.5초 후 모달 표시
+        }, 1500); // 캐릭터 메시지가 완전히 끝난 후 1.5초 후 모달 표시
     }
 }
 
@@ -1166,28 +1174,8 @@ async function initializeCharacterForTimer() {
         messageTextElement.textContent = encouragementMessage;
     }
     
-    // 선택된 캐릭터 이미지 설정
-    if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
-        const characterData = window.CHARACTER_DATA[selectedCharacterType];
-        
-        if (characterData && characterImageElement) {
-            // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
-            if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
-                const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
-                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
-                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
-            } else {
-                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
-                characterImageElement.alt = characterData.name;
-            }
-        }
-    } else {
-        // 기본 캐릭터 (포코타)
-        if (characterImageElement) {
-            characterImageElement.src = './images/character/pokota.png';
-            characterImageElement.alt = '포코타';
-        }
-    }
+    // 선택된 캐릭터 이미지 설정 - updateCharacterImage 함수 사용
+    updateCharacterImage(characterImageElement, selectedCharacterType);
 }
 
 async function showCharacterMessage() {
@@ -1244,28 +1232,8 @@ async function showCharacterMessage() {
         messageTextElement.textContent = encouragementMessage;
     }
     
-    // 선택된 캐릭터 이미지 설정 (중간 응원 메시지에서도 이미지 업데이트)
-    if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
-        const characterData = window.CHARACTER_DATA[selectedCharacterType];
-        
-        if (characterData && characterImageElement) {
-            // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
-            if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
-                const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
-                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
-                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
-            } else {
-                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
-                characterImageElement.alt = characterData.name;
-            }
-        }
-    } else {
-        // 기본 캐릭터 (포코타)
-        if (characterImageElement) {
-            characterImageElement.src = './images/character/pokota.png';
-            characterImageElement.alt = '포코타';
-        }
-    }
+    // 선택된 캐릭터 이미지 설정 - updateCharacterImage 함수 사용
+    updateCharacterImage(characterImageElement, selectedCharacterType);
     
     // 말풍선 애니메이션 트리거
     const speechBubble = document.querySelector('.speech-bubble');
@@ -1397,27 +1365,59 @@ async function showCompleteMessage() {
 
 // 캐릭터 이미지 업데이트 헬퍼 함수
 function updateCharacterImage(characterImageElement, selectedCharacterType) {
+    console.log('🖼️ updateCharacterImage 호출:', { selectedCharacterType, hasElement: !!characterImageElement });
+    
+    if (!characterImageElement) {
+        console.error('❌ characterImageElement가 없음');
+        return;
+    }
+    
     if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
-        const characterData = window.CHARACTER_DATA[selectedCharacterType];
+        const characterData = window.characterDatabase && window.characterDatabase[selectedCharacterType];
+        console.log('🎯 선택된 캐릭터 데이터:', { selectedCharacterType, hasCharacterData: !!characterData });
         
-        if (characterData && characterImageElement) {
+        if (characterData) {
             // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
             if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
                 const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
-                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
-                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
+                console.log('👗 선택된 코스튬 객체:', selectedCostume);
+                
+                // selectedCostume이 객체인 경우 image 속성 사용, 문자열인 경우 그대로 사용
+                let costumeImagePath;
+                if (typeof selectedCostume === 'object' && selectedCostume.image) {
+                    costumeImagePath = selectedCostume.image;
+                } else if (typeof selectedCostume === 'string') {
+                    costumeImagePath = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
+                } else {
+                    // fallback: 기본 캐릭터 이미지
+                    costumeImagePath = `./images/character/${selectedCharacterType}.png`;
+                }
+                
+                console.log('👗 코스튬 이미지 경로:', costumeImagePath);
+                characterImageElement.src = costumeImagePath;
+                characterImageElement.alt = typeof selectedCostume === 'object' 
+                    ? `${characterData.name} - ${selectedCostume.name || 'costume'}` 
+                    : `${characterData.name} - ${selectedCostume}`;
             } else {
-                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
+                const characterImageSrc = `./images/character/${selectedCharacterType}.png`;
+                console.log('🧍 기본 캐릭터 이미지 설정:', characterImageSrc);
+                characterImageElement.src = characterImageSrc;
                 characterImageElement.alt = characterData.name;
             }
-        }
-    } else {
-        // 기본 캐릭터 (포코타)
-        if (characterImageElement) {
+        } else {
+            // characterData가 없으면 기본 포코타
+            console.log('📝 characterData 없음, 기본 포코타로 설정');
             characterImageElement.src = './images/character/pokota.png';
             characterImageElement.alt = '포코타';
         }
+    } else {
+        // appState가 없으면 기본 캐릭터 (포코타)
+        console.log('📝 appState 없음, 기본 포코타로 설정');
+        characterImageElement.src = './images/character/pokota.png';
+        characterImageElement.alt = '포코타';
     }
+    
+    console.log('✅ 최종 이미지 설정 완료:', characterImageElement.src);
 }
 
 // 말풍선 애니메이션 트리거 헬퍼 함수
@@ -1797,6 +1797,16 @@ function showAddHabitModal() {
 
 function showAddHabitModalWithData(goal, duration) {
     console.log('📋 showAddHabitModalWithData 호출됨:', { goal, duration });
+    
+    // 모든 모달 먼저 닫기 (충돌 방지)
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay && overlay.style.display !== 'none') {
+        console.log('🚫 기존 모달 감지, 모든 모달 닫는 중...');
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modal => modal.style.display = 'none');
+        overlay.style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
     
     // Pre-fill habit name based on goal
     const habitModalName = document.getElementById('habitModalName');
@@ -2870,8 +2880,12 @@ function updateTimerCharacterImage() {
             let characterName = character.name;
             
             // 코스튬이 선택되어 있으면 코스튬 이미지 사용
-            if (selectedCostume && selectedCostume.image) {
-                imageSource = selectedCostume.image;
+            if (selectedCostume) {
+                if (typeof selectedCostume === 'object' && selectedCostume.image) {
+                    imageSource = selectedCostume.image;
+                } else if (typeof selectedCostume === 'string') {
+                    imageSource = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
+                }
             }
             
             // 이미지 src와 alt 업데이트
