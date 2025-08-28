@@ -3671,12 +3671,14 @@ body.modal-open {
     background: white;
     border: 2px solid #e1e8ed;
     border-radius: 15px;
-    padding: 15px;
+    padding: 12px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 150px;
+    width: 100%;
 }
 
 .costume-option:hover {
@@ -3692,9 +3694,9 @@ body.modal-open {
 }
 
 .costume-image {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 10px;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 8px;
     border-radius: 10px;
     overflow: hidden;
     display: flex;
@@ -3710,11 +3712,12 @@ body.modal-open {
 }
 
 .costume-name {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #333;
     font-family: 'NanumSquareRound', Arial, sans-serif;
     margin-bottom: 5px;
+    line-height: 1.2;
 }
 
 .costume-selected-badge {
@@ -3739,15 +3742,19 @@ body.modal-open {
 
 .costume-collection-stats {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
 .stat-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .stat-label {
@@ -3778,8 +3785,23 @@ body.modal-open {
 }
 
 .costume-collection-grid .costume-options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+/* 추가적인 그리드 강제 적용 */
+#costumeOptions .costume-options-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px;
+    width: 100%;
+}
+
+.costume-options-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 15px;
     padding: 10px 0;
 }
@@ -3792,17 +3814,19 @@ body.modal-open {
     }
     
     .costume-option {
-        padding: 10px;
+        padding: 8px;
+        max-width: 100px;
     }
     
     .costume-image {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 8px;
+        width: 50px;
+        height: 50px;
+        margin-bottom: 6px;
     }
     
     .costume-name {
-        font-size: 12px;
+        font-size: 11px;
+        line-height: 1.1;
     }
     
     .costume-selected-badge {
@@ -3815,21 +3839,25 @@ body.modal-open {
     }
     
     .costume-collection-stats {
-        flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 15px;
+        flex-wrap: wrap;
     }
     
     .stat-item {
-        justify-content: space-between;
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
     
     .costume-collection-grid {
         padding: 15px 20px;
     }
     
-    .costume-collection-grid .costume-options-grid {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    .costume-collection-grid .costume-options-grid,
+    #costumeOptions .costume-options-grid,
+    .costume-options-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 10px;
     }
 }
