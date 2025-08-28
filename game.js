@@ -832,7 +832,7 @@ function updateCharacterGachaPullButton() {
             gachaPullBtn.style.opacity = '0.5';
             gachaPullBtn.style.cursor = 'not-allowed';
             console.log('🎉 모든 캐릭터 보유 완료 - 버튼 비활성화');
-        } else if (points >= 100) {
+        } else if (points >= 10) {
             // 포인트가 충분한 경우
             gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.add('active');
@@ -871,8 +871,6 @@ function selectCharacterFromCollectionMain(characterType, isOwned) {
 function openCostumeModal(characterType) {
     const modal = document.getElementById('costumeModal');
     const title = document.getElementById('costumeModalTitle');
-    const characterName = document.getElementById('currentCostumeCharacterName');
-    const availableCount = document.getElementById('availableCostumesCount');
     const costumeOptions = document.getElementById('costumeOptions');
     
     if (!modal || !costumeOptions) return;
@@ -880,10 +878,8 @@ function openCostumeModal(characterType) {
     const character = characterDatabase[characterType];
     const ownedCostumes = appState.gacha.ownedCostumes[characterType] || [];
     
-    // 모달 제목 및 정보 설정
+    // 모달 제목 설정
     if (title) title.textContent = `${character.name} 코스튬 선택`;
-    if (characterName) characterName.textContent = character.name;
-    if (availableCount) availableCount.textContent = ownedCostumes.length;
     
     // 코스튬 옵션 렌더링
     const costumesHTML = ownedCostumes.map(costumeId => {
@@ -902,7 +898,7 @@ function openCostumeModal(characterType) {
     }).join('');
     
     costumeOptions.innerHTML = `
-        <div class="costume-options-grid">
+        <div class="costume-options-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%;">
             ${costumesHTML}
         </div>
     `;
