@@ -3210,13 +3210,24 @@ body.modal-open {
     top: -3px;
     right: -3px;
     font-size: 14px;
-    background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
     width: 20px;
     height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: bold;
+}
+
+/* 자물쇠 아이콘 (미보유) - 기본값 */
+.character-locked-badge-main {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* 체크 아이콘 (선택됨) - 클래스 추가로 구분 */
+.character-locked-badge-main.selected {
+    background: #10b981;
+    color: white;
 }
 
 .unowned-text-main {

@@ -560,7 +560,7 @@ function updateCharacterCollectionMain() {
                         <img src="${isOwned ? displayImage : character.silhouette}" alt="${character.name}" class="character-image">
                     </div>
                     ${!isOwned ? '<div class="character-locked-badge-main">🔒</div>' : ''}
-                    ${isSelected && isOwned ? '<div class="character-selected-badge-main">✓</div>' : ''}
+                    ${isSelected && isOwned ? '<div class="character-locked-badge-main selected">✓</div>' : ''}
                 </div>
                 <div class="character-name-main ${!isOwned ? 'unowned-text-main' : ''}">${character.name}</div>
                 <div class="character-count-main ${!isOwned ? 'unowned-text-main' : ''}">${isOwned ? '코스튬 선택' : '미보유'}</div>
@@ -958,22 +958,6 @@ const costumeStyles = `
     font-weight: 600;
 }
 
-.character-selected-badge-main {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: #10b981;
-    color: white;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: bold;
-    z-index: 2;
-}
 
 .unowned-text-main {
     color: #9ca3af !important;
