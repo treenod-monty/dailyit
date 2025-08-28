@@ -3363,19 +3363,23 @@ body.modal-open {
     }
     
     .character-collection-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
         width: 100%;
         max-width: 100%;
+        padding: 0 10px;
     }
     
     .character-card-main {
-        padding: 8px;
-        margin: 0 auto;
-        min-height: 85px;
+        padding: 6px;
+        margin: 0;
+        min-height: 80px;
+        max-width: 100px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .character-image-main-container {
@@ -3387,19 +3391,56 @@ body.modal-open {
     }
     
     .character-image-main {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
+        max-width: 100%;
     }
     
     .character-name-main {
-        font-size: 11px !important;
-        line-height: 1.2;
-        margin-bottom: 2px;
+        font-size: 10px !important;
+        line-height: 1.1;
+        margin-bottom: 1px;
+        word-break: keep-all;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     .character-count-main {
-        font-size: 10px !important;
-        line-height: 1.2;
+        font-size: 9px !important;
+        line-height: 1.1;
+        word-break: keep-all;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Extra Small Mobile: 360px and below */
+@media (max-width: 360px) {
+    .character-collection-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+        padding: 0 8px;
+    }
+    
+    .character-card-main {
+        padding: 4px;
+        min-height: 75px;
+        max-width: 90px;
+    }
+    
+    .character-image-main {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .character-name-main {
+        font-size: 9px !important;
+    }
+    
+    .character-count-main {
+        font-size: 8px !important;
     }
 }
 
