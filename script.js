@@ -1111,11 +1111,11 @@ async function confirmAddHabit() {
     };
     
     try {
-        if (dailytDB) {
+        if (window.DailytDB) {
             // IndexedDB에 저장
-            await dailytDB.addHabit(newHabit);
+            await window.DailytDB.addHabit(newHabit);
             // 세션 기록도 추가
-            await dailytDB.addSession({
+            await window.DailytDB.addSession({
                 habitId: newHabit.id,
                 goal: currentSession.goal,
                 duration: currentSession.duration,
@@ -1631,10 +1631,10 @@ async function saveUserData() {
         
         let savedToIndexedDB = false;
         
-        if (dailytDB) {
+        if (window.DailytDB && typeof window.DailytDB.saveUserData === 'function') {
             try {
                 // IndexedDB에 저장
-                await dailytDB.saveUserData({
+                await window.DailytDB.saveUserData({
                     points: userPoints,
                     currentPartner: currentPartner
                 });
@@ -1645,7 +1645,7 @@ async function saveUserData() {
             }
         }
         
-        // IndexedDB 저장 실패 시 또는 dailytDB가 없을 때 localStorage 사용
+        // IndexedDB 저장 실패 시 또는 window.DailytDB가 없을 때 localStorage 사용
         if (!savedToIndexedDB) {
             const userData = {
                 points: userPoints,
@@ -1683,9 +1683,9 @@ async function loadUserData() {
     
     try {
         // 1차: IndexedDB에서 로드 시도
-        if (dailytDB) {
+        if (window.DailytDB) {
             try {
-                const userData = await dailytDB.getUserData();
+                const userData = await window.DailytDB.getUserData();
                 if (userData && userData.points !== undefined) {
                     userPoints = userData.points;
                     currentPartner = userData.currentPartner || null;
@@ -1694,7 +1694,7 @@ async function loadUserData() {
                 }
                 
                 // 습관은 별도로 로드
-                const habits = await dailytDB.getHabits();
+                const habits = await window.DailytDB.getHabits();
                 userHabits = habits || [];
             } catch (dbError) {
                 console.warn('⚠️ IndexedDB 로드 실패:', dbError);
@@ -1777,7 +1777,7 @@ async function loadUserData() {
             userPoints = 100;
             currentPartner = null;
             userHabits = [];
-        } else if (!dailytDB) {
+        } else if (!window.DailytDB) {
             // DailytDB가 없으면 습관 기능 비활성화
             userHabits = [];
         }
@@ -1795,7 +1795,7 @@ async function loadUserData() {
 
 // localStorage에서 IndexedDB로 마이그레이션
 async function migrateFromLocalStorage() {
-    if (!dailytDB) return;
+    if (!window.DailytDB) return;
     
     try {
         const savedData = localStorage.getItem('dailit_data');
@@ -1805,7 +1805,7 @@ async function migrateFromLocalStorage() {
             
             // 사용자 데이터 마이그레이션
             if (data.points || data.partner) {
-                await dailytDB.saveUserData({
+                await window.DailytDB.saveUserData({
                     points: data.points || 100,
                     currentPartner: data.partner
                 });
@@ -1815,7 +1815,7 @@ async function migrateFromLocalStorage() {
             if (data.habits && data.habits.length > 0) {
                 for (const habit of data.habits) {
                     try {
-                        await dailytDB.addHabit(habit);
+                        await window.DailytDB.addHabit(habit);
                     } catch (error) {
                         console.warn('습관 마이그레이션 실패:', habit.name, error);
                     }
@@ -1938,12 +1938,51 @@ function selectBackupFile() {
 }
 
 // 개발자 도구용 - 브라우저 콘솔에서 사용 가능
-window.DailytDB = {
+window.DailytDevTools = {
     export: exportDailytData,
     import: selectBackupFile,
+    
+    // 데이터베이스 상태 확인
+    checkDB: async () => {
+        console.log('🔍 데이터베이스 상태 검사');
+        console.log('- window.DailytDB:', window.DailytDB ? '✅ 초기화됨' : '❌ null');
+        
+        if (window.DailytDB) {
+            try {
+                const userData = await window.DailytDB.getUserData();
+                console.log('- 사용자 데이터:', userData || '없음');
+                
+                const gameData = await window.DailytDB.getAllGameData();
+                console.log('- 게임 데이터:', gameData);
+                
+                const habits = await window.DailytDB.getHabits();
+                console.log('- 습관 데이터:', habits.length + '개');
+            } catch (error) {
+                console.error('- DB 접근 오류:', error);
+            }
+        }
+        
+        console.log('- 현재 전역 변수');
+        console.log('  * userPoints:', userPoints);
+        console.log('  * currentPartner:', currentPartner);
+        if (typeof appState !== 'undefined') {
+            console.log('  * appState.gacha.characters:', appState.gacha.characters.length + '개');
+        }
+    },
+    
+    // 데이터 강제 저장
+    forceSave: async () => {
+        console.log('💾 강제 저장 시작');
+        await saveUserData();
+        if (typeof saveGameData === 'function') {
+            await saveGameData();
+        }
+        console.log('💾 강제 저장 완료');
+    },
+    
     clearAll: async () => {
-        if (dailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
-            const habits = await dailytDB.getHabits();
+        if (window.DailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
+            const habits = await window.DailytDB.getHabits();
             for (const habit of habits) {
                 await dailytDB.deleteHabit(habit.id);
             }
@@ -2507,14 +2546,22 @@ function selectCharacterFromCollectionMain(characterType, isOwned) {
 
 // 메인 페이지용 가차 실행
 async function performCharacterGachaPull() {
+    console.log('🎯 캐릭터 뽑기 시작 - 현재 포인트:', userPoints);
+    
     if (userPoints < 150) {
         showToast('포인트가 부족해요! 더 많은 활동을 해보세요! 💪');
         return;
     }
     
-    // 포인트 차감
+    // 포인트 차감 전 상태 로깅
+    console.log('💰 포인트 차감 전:', userPoints);
     userPoints -= 150;
-    await saveUserData(); // 메인 페이지의 사용자 데이터 저장
+    console.log('💰 포인트 차감 후:', userPoints);
+    
+    // 사용자 데이터 저장
+    console.log('💾 사용자 데이터 저장 시작...');
+    await saveUserData();
+    console.log('💾 사용자 데이터 저장 완료');
     
     // game.js의 performGachaPull 함수를 사용하되, 포인트는 메인 페이지에서 관리
     if (typeof performGachaPull === 'function') {

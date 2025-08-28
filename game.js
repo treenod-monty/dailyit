@@ -449,11 +449,15 @@ async function ensurePokotaOwned() {
 
 // 가차 실행
 async function performGachaPull() {
+    console.log('🎲 가차 실행 시작');
+    
     // 랜덤 캐릭터 뽑기
     const result = drawRandomCharacter();
+    console.log('🎯 뽑힌 캐릭터:', result.character.name, '레어도:', result.character.rarity);
     
     // 캐릭터 추가
     appState.gacha.characters.push(result.character);
+    console.log('📊 현재 보유 캐릭터 수:', appState.gacha.characters.length);
     
     // 코스튬 추가 (기본 코스튬)
     if (!appState.gacha.ownedCostumes[result.character.type]) {
@@ -473,12 +477,15 @@ async function performGachaPull() {
             if (!appState.gacha.ownedCostumes[result.character.type].includes(bonusCostume)) {
                 appState.gacha.ownedCostumes[result.character.type].push(bonusCostume);
                 result.bonusCostume = characterData.costumes[bonusCostume];
+                console.log('🎁 보너스 코스튬 획득:', bonusCostume);
             }
         }
     }
     
     // 게임 데이터 저장
+    console.log('💾 게임 데이터 저장 시작...');
     await saveGameData();
+    console.log('💾 게임 데이터 저장 완료');
     
     // UI 업데이트
     updateCharacterCollectionAndOwnedCounts();
