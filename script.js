@@ -974,6 +974,7 @@ function startProgressTimer() {
         if (!currentSession || currentSession.isPaused) return;
         
         currentSession.remainingTime--;
+        console.log('⏰ 남은 시간:', currentSession.remainingTime);
         updateProgressDisplay();
         
         // Check for motivation moments
@@ -981,6 +982,7 @@ function startProgressTimer() {
         
         // Check for completion
         if (currentSession.remainingTime <= 0) {
+            console.log('🎯 타이머 완료 조건 만족! completeCircleSession 호출');
             completeCircleSession();
         }
     }, 1000);
@@ -1044,8 +1046,13 @@ async function stopCircleTimer() {
 }
 
 async function completeCircleSession() {
-    if (!currentSession) return;
+    console.log('🎉 completeCircleSession 함수 시작');
+    if (!currentSession) {
+        console.log('❌ currentSession이 없어서 종료');
+        return;
+    }
     
+    console.log('⏹️ 타이머 정지 중...');
     // Stop timer
     if (timerInterval) {
         clearInterval(timerInterval);
@@ -1075,8 +1082,11 @@ async function completeCircleSession() {
             durationMinutes: Math.floor(currentSession.duration / 60)
         };
         
+        console.log('📝 습관 등록 모달 표시를 위한 데이터 저장:', completedSessionData);
+        
         // 완료 메시지 표시 후 약간의 딜레이를 두고 모달 표시
         setTimeout(() => {
+            console.log('⏰ 1.5초 딜레이 후 습관 등록 모달 표시 시도');
             showAddHabitModalWithData(completedSessionData.goal, completedSessionData.durationMinutes);
         }, 1500); // 1.5초 후 모달 표시
     }
@@ -1786,13 +1796,20 @@ function showAddHabitModal() {
 }
 
 function showAddHabitModalWithData(goal, duration) {
+    console.log('📋 showAddHabitModalWithData 호출됨:', { goal, duration });
+    
     // Pre-fill habit name based on goal
     const habitModalName = document.getElementById('habitModalName');
     if (habitModalName) {
         habitModalName.value = goal;
+        console.log('✅ 습관 이름 필드에 값 설정:', goal);
+    } else {
+        console.error('❌ habitModalName 엘리먼트를 찾을 수 없음');
     }
     
+    console.log('🔄 addHabitModal 표시 시도');
     showModal('addHabitModal');
+    console.log('✅ showModal 호출 완료');
 }
 
 async function confirmAddHabit() {
