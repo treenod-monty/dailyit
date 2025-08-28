@@ -1980,6 +1980,14 @@ window.DailytDevTools = {
         console.log('💾 강제 저장 완료');
     },
     
+    // 캐릭터 데이터 완전 재설정
+    resetCharacters: async () => {
+        if (typeof resetCharacterDB === 'function' && confirm('모든 캐릭터 데이터를 초기화하시겠습니까?')) {
+            await resetCharacterDB();
+            console.log('🎮 캐릭터 데이터 완전 초기화 완료');
+        }
+    },
+    
     clearAll: async () => {
         if (window.DailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
             const habits = await window.DailytDB.getHabits();

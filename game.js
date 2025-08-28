@@ -374,8 +374,8 @@ async function saveGameData() {
 // 캐릭터 초기화
 // ========================================
 
-// 캐릭터 DB 초기화 및 포코타 기본 설정
-async function initializeCharacterDB() {
+// 캐릭터 DB 완전 재설정 (개발자 도구용)
+async function resetCharacterDB() {
     try {
         if (window.DailytDB) {
             // 게임 데이터 초기화
@@ -405,14 +405,18 @@ async function initializeCharacterDB() {
 
 // 포코타 기본 보유 설정
 async function ensurePokotaOwned() {
+    console.log('🔍 포코타 보유 확인 시작 - 현재 캐릭터 수:', appState.gacha.characters.length);
+    
     // 포코타를 보유하지 않았다면 기본으로 추가
     const hasPokota = appState.gacha.characters.some(char => char.type === 'pokota');
+    console.log('🎯 포코타 보유 여부:', hasPokota);
     
     if (!hasPokota) {
         // 포코타 기본 캐릭터 추가
         const pokotaCharacter = {
             id: Date.now().toString(),
             type: 'pokota',
+            name: characterDatabase.pokota.name,
             rarity: 'common',
             acquiredAt: Date.now(),
             costume: 'default'
@@ -922,8 +926,7 @@ function createExplosion(container, x, y, color) {
 // script.js에서 호출하는 함수들
 async function loadCharacterGameData() {
     await loadGameData();
-    await initializeCharacterDB(); // DB 초기화
-    await ensurePokotaOwned();
+    await ensurePokotaOwned(); // 포코타 보유 확인만 실행 (초기화 제거)
 }
 
 function updateCharacterPoints() {
