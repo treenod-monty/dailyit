@@ -898,7 +898,7 @@ function openCostumeModal(characterType) {
     }).join('');
     
     costumeOptions.innerHTML = `
-        <div class="costume-options-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%;">
+        <div class="costume-options-grid" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 15px; width: 100% !important; justify-items: center;">
             ${costumesHTML}
         </div>
     `;
