@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <title>데일릿 - 포커스 집중 & 생활 타이밍</title>
+    <link rel="icon" type="image/png" href="./images/logo.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Main Container -->
+    <main class="container">
+        
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">
+                <img src="./images/title.png" alt="데일릿" class="title-image">
+            </h1>
+            <div class="status-bar">
+                <div class="points-display">
+                    <i data-lucide="gem" class="points-icon"></i>
+                    <span class="points-count">0</span>
+                    <span class="points-label">포인트</span>
+                </div>
+                <div class="current-partner" id="partnerNameElement">
+                    <span class="partner-name">포코타</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <section class="tab-section">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="focus">집중</button>
+                <button class="tab-btn" data-tab="habits">습관</button>
+                <button class="tab-btn" data-tab="characters">캐릭터</button>
+            </div>
+
+            <!-- Focus Tab -->
+            <div id="focus-tab" class="tab-content active">
+                <!-- Large Circle States -->
+                <div class="focus-circle-container">
+                    <!-- Idle State -->
+                    <div id="circle-idle" class="circle-state active">
+                        <div class="large-circle clickable" id="mainCircle">
+                            <div class="circle-content">
+                                <div class="circle-main-text">목표 설정하기</div>
+                                <div class="circle-sub-text">탭해서 목표와 시간을 정하면 타이머가 시작돼</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Setup Panel State -->
+                    <div id="circle-setup" class="circle-state">
+                        <div class="setup-panel">
+                            <h2 class="setup-title">뭘 집중해서 해볼까?</h2>
+                            <p class="setup-subtitle">목표와 시간을 설정해보자</p>
+                            
+                            <div class="setup-form">
+                                <div class="form-section">
+                                    <label class="setup-label">목표</label>
+                                    <div class="goal-input-group">
+                                        <input type="text" id="circleGoalInput" class="setup-input" placeholder="예: 60분 PPT 만들기" maxlength="50">
+                                        <button type="button" id="selectFromHabitsBtn" class="select-habit-btn" title="습관에서 선택">
+                                            <i data-lucide="bookmark"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <label class="setup-label">시간 선택</label>
+                                    <div class="time-chips">
+                                        <button class="time-chip" data-time="0.0167">1초</button>
+                                        <button class="time-chip" data-time="10">10분</button>
+                                        <button class="time-chip" data-time="30">30분</button>
+                                        <button class="time-chip active" data-time="60">1시간</button>
+                                        <button class="time-chip" data-time="custom" id="customTimeBtn">직접입력</button>
+                                    </div>
+                                    
+                                    <div id="customTimeInput" class="custom-time-input" style="display: none;">
+                                        <input type="number" id="customMinutes" placeholder="분 입력" min="1" max="300" class="custom-input">
+                                    </div>
+                                </div>
+                                
+                                <button id="startTimerBtn" class="setup-start-btn" disabled>
+                                    타이머 시작
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress State -->
+                    <div id="circle-progress" class="circle-state">
+                        <div class="goal-label" id="progressGoalLabel">목표명</div>
+                        <div class="large-circle">
+                            <svg class="circle-progress-ring" viewBox="0 0 280 280">
+                                <circle cx="140" cy="140" r="120" class="progress-track"></circle>
+                                <circle cx="140" cy="140" r="120" class="progress-fill" id="progressRing"></circle>
+                            </svg>
+                            <div class="circle-timer">
+                                <div class="timer-time" id="circleTimerTime">25:00</div>
+                            </div>
+                        </div>
+                        <div class="character-message" id="characterMessage">
+                            <i data-lucide="zap" class="character-avatar"></i>
+                            <span class="message-text">파이팅! 좋아, 너도 잘 해낼 거야!</span>
+                        </div>
+                        <div class="timer-controls">
+                            <button id="pauseTimerBtn" class="control-btn"><i data-lucide="pause"></i> 일시정지</button>
+                            <button id="stopTimerBtn" class="control-btn stop-btn"><i data-lucide="square"></i> 중지</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habits Tab -->
+            <div id="habits-tab" class="tab-content">
+                <!-- New Habit Button -->
+                <div class="habits-header">
+                    <button id="newHabitBtn" class="new-habit-btn">
+                        <span class="new-habit-icon">+</span>
+                        <span class="new-habit-text">새 습관 등록하기</span>
+                    </button>
+                </div>
+
+                <!-- Existing Habits List -->
+                <div class="habits-section">
+                    <div class="habit-list" id="habitsList">
+                        <!-- Empty state -->
+                        <div class="empty-habits" id="emptyHabits">
+                            <div class="empty-icon">📋</div>
+                            <p class="empty-text">아직 습관이 없어요.</p>
+                            <p class="empty-subtext">위 버튼을 눌러 등록해보자!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Characters Tab -->
+            <div id="characters-tab" class="tab-content">
+
+                <!-- Gacha Button -->
+                <div class="character-gacha-card">
+                    <button id="characterGachaPull" class="character-gacha-pull-btn">
+                        <span class="character-gacha-btn-text">캐릭터 뽑기</span>
+                    </button>
+                </div>
+
+                <!-- Character Collection -->
+                <div class="character-collection-section">
+                    <div class="character-collection-header">
+                        <h3 class="character-collection-title">캐릭터 도감</h3>
+                        <div class="character-collection-stats" id="characterCollectionStats">10/10종 수집</div>
+                    </div>
+                    <div class="character-collection-grid" id="characterCollectionGrid">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Partners Section (Hidden for now) -->
+        <section class="partners-section" style="display: none;">
+            <h2 class="section-title">AI 파트너</h2>
+            <div class="partners-grid">
+                <div class="partner-card" data-partner="fox">
+                    <div class="partner-avatar-large"><i data-lucide="zap"></i></div>
+                    <h3 class="partner-name">Tempo Fox</h3>
+                    <p class="partner-description">집중력 최적화 전문</p>
+                    <div class="partner-stats">
+                        <span class="stat"><i data-lucide="gem"></i> 필요 포인트</span>
+                        <span class="partner-cost">200pt</span>
+                    </div>
+                    <button class="partner-btn" data-action="exchange" data-partner="fox">교환하기</button>
+                </div>
+
+                <div class="partner-card" data-partner="owl">
+                    <div class="partner-avatar-large"><i data-lucide="moon"></i></div>
+                    <h3 class="partner-name">Planner Owl</h3>
+                    <p class="partner-description">생활 루틴 관리 전문</p>
+                    <div class="partner-stats">
+                        <span class="stat"><i data-lucide="gem"></i> 필요 포인트</span>
+                        <span class="partner-cost">200pt</span>
+                    </div>
+                    <button class="partner-btn" data-action="exchange" data-partner="owl">교환하기</button>
+                </div>
+
+                <div class="partner-card" data-partner="cat">
+                    <div class="partner-avatar-large"><i data-lucide="heart"></i></div>
+                    <h3 class="partner-name">Empathy Cat</h3>
+                    <p class="partner-description">정서적 지원 전문</p>
+                    <div class="partner-stats">
+                        <span class="stat"><i data-lucide="gem"></i> 필요 포인트</span>
+                        <span class="partner-cost">300pt</span>
+                    </div>
+                    <button class="partner-btn" data-action="exchange" data-partner="cat">교환하기</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- Modal: Partner Exchange -->
+    <div id="partnerExchangeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">파트너 교환</h3>
+                <button class="modal-close" data-close="partnerExchangeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="exchange-info">
+                    <div class="selected-partner">
+                        <div class="partner-avatar-large" id="exchangePartnerAvatar"><i data-lucide="zap"></i></div>
+                        <h4 id="exchangePartnerName">Tempo Fox</h4>
+                        <p id="exchangePartnerDesc">집중력 최적화 전문</p>
+                    </div>
+                    <div class="exchange-cost">
+                        <p class="cost-text">교환 비용: <span id="exchangeCost">200</span>pt</p>
+                        <p class="current-points">보유 포인트: <span id="currentPoints">0</span>pt</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmExchange" class="modal-btn primary">교환하기</button>
+                <button id="cancelExchange" class="modal-btn secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Session Complete -->
+    <div id="sessionCompleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🎉 세션 완료!</h3>
+                <button class="modal-close" data-close="sessionCompleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="completion-summary">
+                    <h4 class="completed-goal" id="completedGoal"></h4>
+                    <div class="rewards">
+                        <div class="reward-item">
+                            <i data-lucide="gem" class="reward-icon"></i>
+                            <span class="reward-text">집중 완료: <span id="focusReward">+50pt</span></span>
+                        </div>
+                        <div class="reward-item habit-bonus" style="display: none;">
+                            <span class="reward-icon">🍃</span>
+                            <span class="reward-text">생활 연계 보너스: <span id="habitReward">+20pt</span></span>
+                        </div>
+                    </div>
+                    <div class="partner-message">
+                        <i data-lucide="zap" class="message-avatar"></i>
+                        <span class="message-text">훌륭한 집중 세션이었어! 계속 이런 식으로 해보자!</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="newSessionBtn" class="modal-btn primary">새 세션 시작</button>
+                <button id="closeCompleteModal" class="modal-btn secondary">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmation -->
+    <div id="confirmationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmTitle">확인</h3>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text" id="confirmMessage">정말로 진행하시겠습니까?</p>
+            </div>
+            <div class="modal-footer horizontal">
+                <button id="confirmNo" class="modal-btn secondary">취소</button>
+                <button id="confirmYes" class="modal-btn primary">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Alert -->
+    <div id="alertModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="alertTitle">알림</h3>
+                <button class="modal-close" data-close="alertModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text" id="alertMessage">알림 메시지</p>
+            </div>
+            <div class="modal-footer">
+                <button id="alertOk" class="modal-btn primary">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Habit -->
+    <div id="addHabitModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">습관으로 추가할까요?</h3>
+                <button class="modal-close" data-close="addHabitModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text">이 목표를 습관으로 저장하면 다음에 더 쉽게 시작해</p>
+                <div class="habit-form">
+                    <div class="form-group">
+                        <label class="form-label">습관 이름</label>
+                        <input type="text" id="habitModalName" class="form-input" placeholder="예: 매일 PPT 작업" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">반복 주기</label>
+                        <div class="cadence-toggle">
+                            <button class="cadence-btn active" data-cadence="daily">일간</button>
+                            <button class="cadence-btn" data-cadence="weekly">주간</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmAddHabit" class="modal-btn primary">습관으로 추가</button>
+                <button id="skipAddHabit" class="modal-btn secondary">그냥 종료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create New Habit -->
+    <div id="createHabitModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">새 습관 등록</h3>
+                <button class="modal-close" data-close="createHabitModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="habit-form">
+                    <div class="form-group">
+                        <label class="form-label">습관 이름</label>
+                        <input type="text" id="createHabitName" class="form-input" placeholder="예: 매일 PPT 작업" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">반복 주기</label>
+                        <div class="cadence-toggle">
+                            <button class="cadence-btn active" data-cadence="daily">일간</button>
+                            <button class="cadence-btn" data-cadence="weekly">주간</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">기본 시간</label>
+                        <select id="createHabitTime" class="time-select">
+                            <option value="10">10분</option>
+                            <option value="30" selected>30분</option>
+                            <option value="60">60분</option>
+                            <option value="custom">직접입력</option>
+                        </select>
+                    </div>
+                    <div id="createCustomTime" class="form-group" style="display: none;">
+                        <label class="form-label">사용자 지정 시간</label>
+                        <input type="number" id="createCustomMinutes" class="form-input" placeholder="분 입력" min="1" max="300">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmCreateHabit" class="modal-btn primary">등록</button>
+                <button id="cancelCreateHabit" class="modal-btn secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Habit -->
+    <div id="editHabitModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">습관 편집</h3>
+                <button class="modal-close" data-close="editHabitModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="habit-form">
+                    <div class="form-group">
+                        <label class="form-label">습관 이름</label>
+                        <input type="text" id="editHabitName" class="form-input" placeholder="예: 매일 PPT 작업" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">반복 주기</label>
+                        <div class="cadence-toggle">
+                            <button class="cadence-btn" data-cadence="daily">일간</button>
+                            <button class="cadence-btn" data-cadence="weekly">주간</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">기본 시간</label>
+                        <select id="editHabitTime" class="time-select">
+                            <option value="10">10분</option>
+                            <option value="30">30분</option>
+                            <option value="60">60분</option>
+                            <option value="custom">직접입력</option>
+                        </select>
+                    </div>
+                    <div id="editCustomTime" class="form-group" style="display: none;">
+                        <label class="form-label">사용자 지정 시간</label>
+                        <input type="number" id="editCustomMinutes" class="form-input" placeholder="분 입력" min="1" max="300">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmEditHabit" class="modal-btn primary">저장</button>
+                <button id="cancelEditHabit" class="modal-btn secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Select Habit for Focus Timer -->
+    <div id="selectHabitModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">습관에서 선택하기</h3>
+                <button class="modal-close" data-close="selectHabitModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text">집중할 습관을 선택하면 목표와 시간이 자동으로 설정됩니다</p>
+                <div class="select-habit-list" id="selectHabitList">
+                    <!-- 습관 목록이 여기에 동적으로 생성됩니다 -->
+                    <div class="empty-select-habits" id="emptySelectHabits" style="display: none;">
+                        <div class="empty-icon">📝</div>
+                        <p class="empty-text">등록된 습관이 없습니다</p>
+                        <p class="empty-subtext">먼저 습관을 등록해보세요!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelSelectHabit" class="modal-btn secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gacha Result Modal -->
+    <div id="gachaResultModal" class="character-modal" style="display: none;">
+        <div class="character-modal-content">
+            <div class="character-modal-header">
+                <h3>🎉 뽑기 결과</h3>
+                <span class="character-modal-close" onclick="closeGachaResultModal()">&times;</span>
+            </div>
+            <div class="character-modal-body">
+                <div id="gachaResultContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Costume Selection Modal -->
+    <div id="costumeModal" class="character-modal" style="display: none;">
+        <div class="character-modal-content">
+            <div class="character-modal-header">
+                <h3 id="costumeModalTitle">코스튬 선택</h3>
+                <span class="character-modal-close" onclick="closeCostumeModal()">&times;</span>
+            </div>
+            <div class="character-modal-body">
+                <div class="costume-collection-summary">
+                    <div class="costume-collection-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">현재 캐릭터:</span>
+                            <span id="currentCostumeCharacterName">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">사용 가능한 코스튬:</span>
+                            <span id="availableCostumesCount">0</span>개
+                        </div>
+                    </div>
+                </div>
+                <div class="costume-collection-grid" id="costumeOptions">
+                    <!-- Costume options will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for modals -->
+    <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
+
+    <script src="script.js"></script>
+    <script src="game.js"></script>
+    <script>
+        // Initialize Lucide icons after DOM content is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

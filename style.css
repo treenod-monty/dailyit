@@ -1,0 +1,3289 @@
+/* ========================================
+   1. FONT FACE DECLARATIONS
+======================================== */
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('./fonts/NanumSquareRoundOTFL.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('./fonts/NanumSquareRoundOTFR.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('./fonts/NanumSquareRoundOTFB.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('./fonts/NanumSquareRoundOTFEB.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* ========================================
+   2. RESET STYLES
+======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* Mobile optimizations */
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-touch-callout: none;
+}
+
+button, .tab-btn, .time-btn, .habit-start-btn, .habit-edit-btn, .habit-delete-btn, .quick-start-btn, .timer-start-btn, .partner-name.clickable {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* ========================================
+   3. GLOBAL STYLES
+======================================== */
+body {
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    font-weight: 400;
+    color: #333333;
+    background: white;
+    min-height: 100vh;
+    line-height: 1.5;
+    min-width: 480px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 80px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    min-height: 100vh;
+}
+
+/* ========================================
+   4. HEADER STYLES
+======================================== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFFFFF;
+    padding: 15px 20px;
+    border-bottom: 1px solid #CCCCCC;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 28px;
+    font-weight: 800;
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.title-image {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Lucide Icon Styles */
+[data-lucide] {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.points-icon[data-lucide] {
+    width: 20px;
+    height: 20px;
+    color: #4CAF50;
+}
+
+.partner-icon[data-lucide], 
+.character-avatar[data-lucide], 
+.message-avatar[data-lucide] {
+    width: 24px;
+    height: 24px;
+    color: #FF9800;
+}
+
+.partner-avatar-large [data-lucide] {
+    width: 48px;
+    height: 48px;
+    color: #2196F3;
+}
+
+.reward-icon[data-lucide] {
+    width: 18px;
+    height: 18px;
+    color: #4CAF50;
+}
+
+.habit-start-btn [data-lucide] {
+    width: 16px;
+    height: 16px;
+    color: #4CAF50;
+}
+
+.habit-edit-btn [data-lucide] {
+    width: 16px;
+    height: 16px;
+    color: #2196F3;
+}
+
+.habit-delete-btn [data-lucide] {
+    width: 16px;
+    height: 16px;
+    color: #f44336;
+}
+
+.control-btn [data-lucide] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+/* Focus Timer Goal Input Group */
+.goal-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.goal-input-group .setup-input {
+    flex: 1;
+}
+
+.select-habit-btn {
+    padding: 12px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 48px;
+}
+
+.select-habit-btn:hover {
+    border-color: #4CAF50;
+    background: #f8fdf8;
+}
+
+.select-habit-btn [data-lucide] {
+    width: 20px;
+    height: 20px;
+    color: #666666;
+}
+
+.select-habit-btn:hover [data-lucide] {
+    color: #4CAF50;
+}
+
+/* Select Habit Modal Styles */
+.select-habit-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.select-habit-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.select-habit-item:hover {
+    border-color: #4CAF50;
+    background: #f8fdf8;
+}
+
+.select-habit-item:last-child {
+    margin-bottom: 0;
+}
+
+.select-habit-info {
+    flex: 1;
+}
+
+.select-habit-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 4px;
+}
+
+.select-habit-details {
+    font-size: 14px;
+    color: #666666;
+}
+
+.select-habit-icon {
+    margin-left: 16px;
+    color: #4CAF50;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.select-habit-item:hover .select-habit-icon {
+    opacity: 1;
+}
+
+.select-habit-icon [data-lucide] {
+    width: 20px;
+    height: 20px;
+}
+
+.empty-select-habits {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666666;
+}
+
+.empty-select-habits .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-select-habits .empty-text {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-select-habits .empty-subtext {
+    font-size: 14px;
+    color: #888888;
+}
+
+.status-bar {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.points-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+}
+
+.current-partner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background: #A8E6A3;
+    border-radius: 15px;
+    font-weight: 700;
+    margin: 0;
+    width: 140px;
+    justify-content: center;
+}
+
+.points-count {
+    font-size: 14px;
+    color: #4CAF50;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.current-partner .partner-name {
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+
+.points-label {
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+/* ========================================
+   5. SECTION STYLES
+======================================== */
+.tab-section, .partners-section {
+    background: #FFFFFF;
+    padding: 40px 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+.timer-section {
+    background: transparent;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 25px;
+    text-align: center;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+/* ========================================
+   6. TAB SYSTEM STYLES
+======================================== */
+.tab-nav {
+    display: flex;
+    border-bottom: 2px solid #E1E8ED;
+    margin-bottom: 30px;
+    gap: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    color: #888888;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn.active {
+    color: #4CAF50;
+}
+
+.tab-btn:focus {
+    outline: none;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #4CAF50;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ========================================
+   6. HABIT STYLES
+======================================== */
+
+/* Habit Registration Section */
+.habit-registration {
+    background: #A8E6A3;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 1px solid #4CAF50;
+}
+
+.registration-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.registration-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 15px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.cadence-toggle {
+    display: flex;
+    border: 2px solid #4CAF50;
+    border-radius: 25px;
+    overflow: hidden;
+    background: white;
+}
+
+.cadence-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    background: white;
+    color: #4CAF50;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    min-height: 44px;
+}
+
+.cadence-btn.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.cadence-btn:hover:not(.active) {
+    background: #F0F8F0;
+}
+
+.time-select {
+    padding: 10px 15px;
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    background: white;
+    color: #333333;
+    cursor: pointer;
+    min-width: 100px;
+    min-height: 44px;
+}
+
+.time-input {
+    width: 80px;
+    padding: 10px 12px;
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    text-align: center;
+    min-height: 44px;
+}
+
+.register-btn {
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 800;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+.register-btn:disabled {
+    background: #CCCCCC;
+    cursor: not-allowed;
+}
+
+.register-btn:not(:disabled):hover {
+    background: #66BB6A;
+    transform: translateY(-2px);
+}
+
+/* Habits Section */
+.habits-section {
+    margin-top: 10px;
+}
+
+.habit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.habit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #F8F9FA;
+    border-radius: 12px;
+    border: 1px solid #E1E8ED;
+    transition: all 0.3s ease;
+}
+
+.habit-item:hover {
+    border-color: #4CAF50;
+    transform: translateY(-1px);
+}
+
+.habit-info {
+    flex: 1;
+}
+
+.habit-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 4px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.habit-duration {
+    font-size: 14px;
+    color: #666666;
+}
+
+.habit-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.habit-start-btn, .habit-edit-btn, .habit-delete-btn {
+    padding: 8px;
+    font-size: 18px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.habit-start-btn {
+    color: #4CAF50;
+}
+
+.habit-start-btn:hover {
+    background: #E8F5E8;
+    transform: scale(1.1);
+}
+
+.habit-edit-btn {
+    color: #2196F3;
+}
+
+.habit-edit-btn:hover {
+    background: #E3F2FD;
+    transform: scale(1.1);
+}
+
+.habit-delete-btn {
+    color: #FF5722;
+}
+
+.habit-delete-btn:hover {
+    background: #FFEBEE;
+    transform: scale(1.1);
+}
+
+/* Empty Habits State */
+.empty-habits {
+    text-align: center;
+    padding: 50px 20px;
+    color: #666666;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.empty-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #666666;
+    margin-bottom: 8px;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #888888;
+}
+
+
+
+/* ========================================
+   7. FOCUS CIRCLE STYLES
+======================================== */
+.focus-circle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 15px;
+    overflow: hidden;
+}
+
+/* Circle State Management */
+.circle-state {
+    display: none;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.circle-state.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+/* Large Circle Base */
+.large-circle {
+    width: min(280px, 90vw);
+    height: min(280px, 90vw);
+    max-width: 280px;
+    max-height: 280px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 3px solid #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    margin: 0 auto;
+}
+
+.large-circle.clickable {
+    cursor: pointer;
+}
+
+.large-circle.clickable:hover {
+    transform: scale(1.02);
+    border-color: #66BB6A;
+}
+
+/* Idle State Styles */
+.circle-content {
+    text-align: center;
+    padding: 40px;
+}
+
+.circle-main-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 15px;
+}
+
+.circle-sub-text {
+    font-size: 14px;
+    font-weight: 300;
+    color: #666666;
+    line-height: 1.4;
+}
+
+/* Setup Panel Styles */
+.setup-panel {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 1px solid #E1E8ED;
+}
+
+.setup-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #333333;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.setup-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: #666666;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.setup-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
+}
+
+.setup-input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #E1E8ED;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 400;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    transition: all 0.3s ease;
+}
+
+.setup-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.time-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-start;
+}
+
+.time-chip {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid #E1E8ED;
+    border-radius: 25px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    min-height: 44px;
+}
+
+.time-chip.active {
+    border-color: #4CAF50;
+    background: #4CAF50;
+    color: white;
+}
+
+.time-chip:hover:not(.active) {
+    border-color: #66BB6A;
+    background: #F0F8F0;
+}
+
+.custom-time-input {
+    margin-top: 12px;
+}
+
+.custom-input {
+    width: 200px;
+    padding: 12px 16px;
+    border: 2px solid #E1E8ED;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 400;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.custom-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.setup-start-btn {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 800;
+    border: none;
+    border-radius: 15px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    margin-top: 10px;
+    min-height: 52px;
+}
+
+.setup-start-btn:disabled {
+    background: #CCCCCC;
+    cursor: not-allowed;
+}
+
+.setup-start-btn:not(:disabled):hover {
+    background: #66BB6A;
+    transform: translateY(-2px);
+}
+
+/* Progress State Styles */
+.goal-label {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.circle-progress-ring {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+    max-width: 280px;
+    max-height: 280px;
+}
+
+.progress-track {
+    fill: none;
+    stroke: #E8F5E8;
+    stroke-width: 8;
+}
+
+.progress-fill {
+    fill: none;
+    stroke: #4CAF50;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 0;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 4px rgba(76, 175, 80, 0.3));
+}
+
+.circle-timer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.timer-time {
+    font-size: 36px;
+    font-weight: 800;
+    color: #333333;
+    line-height: 1.1;
+}
+
+.character-message {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: #A8E6A3;
+    border-radius: 15px;
+    border-left: 4px solid #4CAF50;
+    max-width: 320px;
+    margin: 20px 0;
+}
+
+.character-avatar {
+    font-size: 24px;
+}
+
+.message-text {
+    font-weight: 400;
+    color: #333333;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+    max-width: 280px;
+}
+
+.control-btn {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:not(.stop-btn) {
+    background: #66BB6A;
+    color: white;
+}
+
+.stop-btn {
+    background: #FF8A65;
+    color: white;
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   8. PARTNERS STYLES
+======================================== */
+.partners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.partner-card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #CCCCCC;
+}
+
+.partner-card:hover {
+    transform: translateY(-5px);
+    border-color: #4CAF50;
+}
+
+.partner-avatar-large {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.partner-card .partner-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 10px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.partner-description {
+    font-size: 14px;
+    font-weight: 300;
+    color: #666666;
+    margin-bottom: 20px;
+}
+
+.partner-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: #A8E6A3;
+    border-radius: 10px;
+}
+
+.stat {
+    font-size: 12px;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+.partner-cost {
+    font-size: 16px;
+    font-weight: 800;
+    color: #FF8A65;
+}
+
+.partner-btn {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 800;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.partner-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   9. MODAL STYLES
+======================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+    border: 1px solid #CCCCCC;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333333;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #888888;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #FF8A65;
+}
+
+.modal-body {
+    padding: 25px 30px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+.modal-text {
+    font-size: 16px;
+    font-weight: 400;
+    color: #333333;
+    margin-bottom: 15px;
+    text-align: center;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.modal-sub-text {
+    font-size: 14px;
+    font-weight: 300;
+    color: #666666;
+    text-align: center;
+    margin-bottom: 25px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 400;
+}
+
+.option-label:hover {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.05);
+}
+
+.option-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 15px;
+    padding: 25px 30px;
+    border-top: 1px solid #e1e8ed;
+}
+
+.modal-footer.horizontal {
+    justify-content: space-between;
+}
+
+/* Modal Form Styles */
+.habit-form {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 8px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 14px;
+    border: 1px solid #E1E8ED;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #333333;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.time-select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 14px;
+    border: 1px solid #E1E8ED;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #333333;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+/* ========================================
+   HABITS STYLES
+======================================== */
+.habits-header {
+    padding-top: 20px;
+    padding-bottom: 0;
+    margin: 0 0 24px 0;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.new-habit-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    width: 100%;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: 46px;
+}
+
+.new-habit-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
+}
+
+.new-habit-icon {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.new-habit-text {
+    font-size: 14px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.modal-btn.primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.modal-btn.secondary {
+    background: #CCCCCC;
+    color: #333333;
+}
+
+.modal-btn:hover {
+    transform: translateY(-2px);
+}
+
+.modal-btn.secondary:hover {
+    background: #AAAAAA;
+}
+
+/* Exchange Modal Specific */
+.exchange-info {
+    text-align: center;
+}
+
+.selected-partner {
+    margin-bottom: 25px;
+}
+
+.exchange-cost {
+    padding: 20px;
+    background: #A8E6A3;
+    border-radius: 15px;
+}
+
+.cost-text, .current-points {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+/* Session Complete Modal */
+.completion-summary {
+    text-align: center;
+}
+
+.completed-goal {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333333;
+    margin-bottom: 25px;
+}
+
+.rewards {
+    margin-bottom: 25px;
+}
+
+.reward-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: #A8E6A3;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #333333;
+}
+
+.reward-icon {
+    font-size: 20px;
+}
+
+.partner-message {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: #A8E6A3;
+    border-radius: 15px;
+    border-left: 4px solid #4CAF50;
+}
+
+.message-avatar {
+    font-size: 24px;
+}
+
+.message-text {
+    font-weight: 400;
+    color: #333333;
+    flex: 1;
+}
+
+/* ========================================
+   10. ANIMATIONS
+======================================== */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% { 
+        transform: scale(1); 
+        background: #4CAF50; 
+    }
+    50% { 
+        transform: scale(1.05); 
+        background: #66BB6A; 
+    }
+    100% { 
+        transform: scale(1); 
+        background: #4CAF50; 
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ========================================
+   11. RESPONSIVE DESIGN
+======================================== */
+
+/* Tablet: 768px and below */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 20px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
+    
+    .title-image {
+        height: 35px;
+    }
+    
+    .status-bar {
+        width: 100%;
+        justify-content: space-between;
+        gap: 15px;
+    }
+    
+    .points-display {
+        width: auto;
+        min-width: 130px;
+        flex: 1;
+    }
+    
+    .tab-section, .partners-section {
+        padding: 30px 25px;
+        border-radius: 15px;
+    }
+    
+    .timer-section {
+        padding: 15px 25px;
+        background: transparent;
+    }
+    
+    .tab-nav {
+        margin-bottom: 25px;
+    }
+    
+    .tab-btn {
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+    
+    /* Focus Circle Responsive */
+    .focus-circle-container {
+        padding: 30px 15px;
+    }
+    
+    .large-circle {
+        width: min(240px, 85vw);
+        height: min(240px, 85vw);
+        max-width: 240px;
+        max-height: 240px;
+    }
+    
+    .circle-main-text {
+        font-size: 20px;
+    }
+    
+    .circle-sub-text {
+        font-size: 13px;
+    }
+    
+    /* Setup Panel Responsive */
+    .setup-panel {
+        padding: 25px 20px;
+        max-width: 450px;
+    }
+    
+    .setup-title {
+        font-size: 20px;
+    }
+    
+    .setup-subtitle {
+        font-size: 14px;
+        margin-bottom: 25px;
+    }
+    
+    .setup-form {
+        gap: 20px;
+    }
+    
+    .setup-label {
+        font-size: 15px;
+    }
+    
+    .setup-input {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+    
+    .time-chips {
+        gap: 8px;
+    }
+    
+    .time-chip {
+        padding: 10px 16px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    .custom-input {
+        width: 150px;
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+    
+    .setup-start-btn {
+        padding: 14px 18px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+    
+    .circle-progress-ring {
+        width: 100%;
+        height: 100%;
+        max-width: 240px;
+        max-height: 240px;
+    }
+    
+    .progress-track {
+        stroke-width: 7;
+    }
+    
+    .progress-fill {
+        stroke-width: 7;
+    }
+    
+    .timer-time {
+        font-size: 30px;
+    }
+    
+    .goal-label {
+        font-size: 16px;
+    }
+    
+    .character-message {
+        max-width: 280px;
+        padding: 12px 16px;
+        margin: 15px 0;
+    }
+    
+    .message-text {
+        font-size: 13px;
+    }
+    
+    .timer-controls {
+        gap: 12px;
+        max-width: 240px;
+    }
+    
+    .control-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    /* Habit Registration Responsive */
+    .habit-registration {
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .registration-title {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .form-input {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+    
+    .cadence-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    .time-select, .time-input {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    .register-btn {
+        padding: 10px 20px;
+        font-size: 15px;
+        min-height: 40px;
+        margin-top: 10px;
+    }
+    
+    /* Habit List Responsive */
+    .habit-item {
+        padding: 18px;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .habit-actions {
+        gap: 6px;
+    }
+    
+    .habit-start-btn, .habit-edit-btn, .habit-delete-btn {
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 16px;
+    }
+    
+    /* Focus Timer Goal Input Group - Tablet */
+    .goal-input-group {
+        gap: 6px;
+    }
+    
+    .select-habit-btn {
+        min-width: 40px;
+        height: 44px;
+        padding: 10px;
+    }
+    
+    .select-habit-btn [data-lucide] {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .partners-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .partner-card {
+        padding: 20px;
+    }
+    
+    .modal-content {
+        margin: 0 15px;
+        max-width: 90vw;
+    }
+    
+    .modal-footer:not(.horizontal) {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .modal-footer:not(.horizontal) .modal-btn {
+        width: 100%;
+    }
+}
+
+/* Mobile: 480px and below */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .header {
+        padding: 12px 15px;
+        gap: 12px;
+    }
+    
+    .logo {
+        font-size: 24px;
+    }
+    
+    .title-image {
+        height: 30px;
+    }
+    
+    .tab-section, .partners-section {
+        padding: 25px 20px;
+        border-radius: 12px;
+    }
+    
+    .tab-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    /* Focus Circle Mobile */
+    .focus-circle-container {
+        padding: 25px 10px;
+    }
+    
+    .large-circle {
+        width: min(220px, 80vw);
+        height: min(220px, 80vw);
+        max-width: 220px;
+        max-height: 220px;
+        border-width: 2px;
+    }
+    
+    .circle-main-text {
+        font-size: 18px;
+    }
+    
+    .circle-sub-text {
+        font-size: 12px;
+    }
+    
+    /* Setup Panel Mobile */
+    .setup-panel {
+        padding: 20px 15px;
+        max-width: 380px;
+    }
+    
+    .setup-title {
+        font-size: 18px;
+    }
+    
+    .setup-subtitle {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+    
+    .setup-form {
+        gap: 18px;
+    }
+    
+    .setup-label {
+        font-size: 14px;
+    }
+    
+    .setup-input {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .time-chips {
+        gap: 6px;
+    }
+    
+    .time-chip {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    .custom-input {
+        width: 120px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .setup-start-btn {
+        padding: 12px 16px;
+        font-size: 15px;
+        min-height: 44px;
+    }
+    
+    .circle-progress-ring {
+        width: 100%;
+        height: 100%;
+        max-width: 220px;
+        max-height: 220px;
+    }
+    
+    .progress-track {
+        stroke-width: 6;
+    }
+    
+    .progress-fill {
+        stroke-width: 6;
+    }
+    
+    .timer-time {
+        font-size: 28px;
+    }
+    
+    .goal-label {
+        font-size: 15px;
+    }
+    
+    .character-message {
+        max-width: 260px;
+        padding: 10px 14px;
+        margin: 12px 0;
+    }
+    
+    .message-text {
+        font-size: 12px;
+    }
+    
+    .timer-controls {
+        gap: 10px;
+        max-width: 220px;
+    }
+    
+    .control-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    /* Extra Small Screens */
+    @media (max-width: 360px) {
+        .focus-circle-container {
+            padding: 20px 8px;
+        }
+        
+        .large-circle {
+            width: min(200px, 75vw);
+            height: min(200px, 75vw);
+            max-width: 200px;
+            max-height: 200px;
+            border-width: 2px;
+        }
+        
+        .circle-progress-ring {
+            max-width: 200px;
+            max-height: 200px;
+        }
+        
+        .timer-time {
+            font-size: 24px;
+        }
+        
+        .progress-track,
+        .progress-fill {
+            stroke-width: 5;
+        }
+    }
+    
+    /* Habit Registration Mobile */
+    .habit-registration {
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+    
+    .registration-title {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .cadence-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    .time-select, .time-input {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    .register-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+        min-height: 36px;
+    }
+    
+    /* Habit List Mobile */
+    .habit-item {
+        padding: 15px;
+    }
+    
+    .habit-title {
+        font-size: 15px;
+    }
+    
+    .habit-duration {
+        font-size: 13px;
+    }
+    
+    .habit-actions {
+        gap: 4px;
+    }
+    
+    .habit-start-btn, .habit-edit-btn, .habit-delete-btn {
+        min-width: 32px;
+        min-height: 32px;
+        font-size: 14px;
+    }
+    
+    /* Focus Timer Goal Input Group - Mobile */
+    .goal-input-group {
+        gap: 4px;
+    }
+    
+    .select-habit-btn {
+        min-width: 36px;
+        height: 40px;
+        padding: 8px;
+    }
+    
+    .select-habit-btn [data-lucide] {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Select Habit Modal - Mobile */
+    .select-habit-item {
+        padding: 12px 16px;
+    }
+    
+    .select-habit-name {
+        font-size: 15px;
+    }
+    
+    .select-habit-details {
+        font-size: 13px;
+    }
+    
+    .empty-select-habits {
+        padding: 30px 15px;
+    }
+    
+    .empty-select-habits .empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+    }
+    
+    /* Partner Name Clickable - Mobile styles removed to keep fixed size */
+    
+    /* Empty Habits Mobile */
+    .empty-habits {
+        padding: 40px 15px;
+    }
+}
+
+/* ========================================
+   GAME PAGE STYLES  
+======================================== */
+
+.gacha-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.gacha-header {
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.back-button {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e1e8ed;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #333333;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.back-link:hover {
+    background: #f8fdf8;
+    border-color: #4CAF50;
+    color: #4CAF50;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+}
+
+.back-link [data-lucide] {
+    width: 18px;
+    height: 18px;
+}
+
+.gacha-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.gacha-title-section {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.gacha-title-section h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gacha-subtitle {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.coins-gacha-dashboard {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.coins-gacha-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.coins-progress {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coins-progress-bar {
+    flex: 1;
+    height: 40px;
+    background: #f0f8ff;
+    border: 2px solid #e1e8ed;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.coins-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.5s ease;
+    min-width: 0;
+    position: relative;
+}
+
+.coins-progress-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    width: 100%;
+    text-align: center;
+}
+
+.coins-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.dashboard-gacha-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.dashboard-gacha-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+.dashboard-gacha-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.collection-dashboard {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.collection-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.collection-dashboard-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333333;
+}
+
+.collection-dashboard-stats {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666666;
+}
+
+.collection-grid-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.collection-card-dashboard {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.collection-card-dashboard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.collection-image-dashboard-container {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.collection-image-dashboard {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-image-dashboard img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.collection-image-dashboard.grayscale img {
+    filter: grayscale(100%) opacity(0.5);
+}
+
+.character-locked-badge-small {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.collection-name-dashboard {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 4px;
+}
+
+.collection-count-dashboard {
+    font-size: 12px;
+    color: #666666;
+}
+
+.collection-selected-badge {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.unowned-text {
+    opacity: 0.5;
+}
+
+/* Modal Styles for Game Page */
+.character-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.character-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+}
+
+.character-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 1px solid #e1e8ed;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.character-modal-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.character-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.character-modal-close:hover {
+    opacity: 0.7;
+}
+
+.character-modal-body {
+    padding: 25px 30px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+/* Responsive Design for Game Page */
+@media (max-width: 768px) {
+    .gacha-container {
+        padding: 15px;
+    }
+    
+    .gacha-title-section h1 {
+        font-size: 28px;
+    }
+    
+    .gacha-subtitle {
+        font-size: 16px;
+    }
+    
+    .coins-gacha-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .collection-grid-dashboard {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+    }
+    
+    .collection-card-dashboard {
+        padding: 12px;
+    }
+    
+    .character-modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .back-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gacha-header {
+        padding: 15px;
+    }
+    
+    .gacha-title-section h1 {
+        font-size: 24px;
+    }
+    
+    .collection-grid-dashboard {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 10px;
+    }
+    
+    .collection-image-dashboard {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .collection-name-dashboard {
+        font-size: 12px;
+    }
+    
+    .collection-count-dashboard {
+        font-size: 11px;
+    }
+    
+    .empty-icon {
+        font-size: 40px;
+    }
+    
+    .empty-text {
+        font-size: 16px;
+    }
+    
+    .empty-subtext {
+        font-size: 13px;
+    }
+}
+
+/* =============================================================================
+   FIREWORK EFFECTS
+   ============================================================================= */
+
+.firework-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.firework-launcher {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: launchRocket 1s ease-out forwards;
+}
+
+.firework {
+    position: absolute;
+    pointer-events: none;
+}
+
+.firework-burst {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: burstFlash 0.3s ease-out;
+}
+
+.firework-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: particleExplode 1.5s ease-out forwards;
+}
+
+@keyframes launchRocket {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-400px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+@keyframes burstFlash {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes particleExplode {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+}
+
+/* Gacha Result Modal Animation */
+.gacha-result-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* =============================================================================
+   GAME PAGE ADDITIONAL STYLES
+   ============================================================================= */
+
+.gacha-result-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin: 20px;
+    max-width: 400px;
+    width: 100%;
+}
+
+.result-message {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.result-character {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.result-image {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+.result-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-top: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Character Modal Improvements */
+.character-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.character-modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    max-width: 90%;
+    max-height: 90%;
+    width: 500px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.character-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.character-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.character-modal-close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: background 0.2s;
+}
+
+.character-modal-close:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.character-modal-body {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Temporary message styles */
+.temp-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    z-index: 10000;
+    text-align: center;
+    white-space: pre-line;
+    max-width: 80%;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* =============================================================================
+   COLLECTION PAGE
+   ============================================================================= */
+
+.collection-page {
+    background: #f5f7fa;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+
+/* Back Button at Top */
+.back-button-top {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+.back-btn-purple {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+    transition: all 0.3s ease;
+}
+
+.back-btn-purple:hover {
+    background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.back-btn-purple:active {
+    transform: translateY(0);
+}
+
+.back-btn-purple .back-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* Collection Container */
+.collection-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px 20px;
+}
+
+/* Title Section */
+.collection-title-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.collection-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.collection-subtitle {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Points and Gacha Card */
+.points-gacha-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.points-progress-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.points-badge {
+    background: #fbbf24;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.points-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.points-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.coins-icon {
+    font-size: 24px;
+}
+
+.gacha-pull-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.gacha-pull-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.gacha-pull-btn:hover.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Character Collection Section */
+.character-collection-section {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.collection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.collection-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.collection-stats {
+    background: #ddd6fe;
+    color: #7c3aed;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Character Grid */
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.collection-card-dashboard {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.collection-card-dashboard.owned {
+    border-color: #10b981;
+}
+
+.collection-card-dashboard.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.collection-card-dashboard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.collection-image-dashboard-container {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.collection-image-dashboard {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-image-dashboard img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.collection-image-dashboard.grayscale img {
+    filter: grayscale(100%) opacity(0.5);
+}
+
+.collection-name-dashboard {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.collection-count-dashboard {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.collection-selected-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #3b82f6;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.character-locked-badge-small {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.unowned-text {
+    color: #9ca3af !important;
+}
+
+/* Success checkmark for collected characters */
+.collection-card-dashboard.owned::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #10b981;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .back-button-top {
+        top: 15px;
+        left: 15px;
+    }
+    
+    .back-btn-purple {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .collection-container {
+        padding: 70px 15px 15px;
+    }
+    
+    .collection-title {
+        font-size: 28px;
+    }
+    
+    .points-gacha-card {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .character-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+    
+    .collection-image-dashboard {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .collection-title {
+        font-size: 24px;
+    }
+    
+    .collection-subtitle {
+        font-size: 14px;
+    }
+    
+    .character-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+    }
+    
+    .collection-card-dashboard {
+        padding: 12px;
+    }
+    
+    .collection-image-dashboard {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* =============================================================================
+   CHARACTERS TAB (Main Page)
+   ============================================================================= */
+
+/* Character Gacha Card */
+.character-gacha-card {
+    margin: 20px 0 24px 0;
+    padding-top: 20px;
+}
+
+.character-gacha-pull-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.character-gacha-pull-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.character-gacha-pull-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.character-gacha-pull-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.character-gacha-pull-btn:hover.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.character-gacha-btn-text {
+    display: block;
+}
+
+/* Character Collection Section */
+.character-collection-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.character-collection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.character-collection-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.character-collection-stats {
+    background: #ddd6fe;
+    color: #7c3aed;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Character Collection Grid */
+.character-collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.character-card-main {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.character-card-main.owned {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.character-card-main.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.character-card-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.character-image-main-container {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.character-image-main {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.character-image-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.character-image-main.grayscale img {
+    filter: grayscale(100%) opacity(0.4);
+}
+
+.character-name-main {
+    font-weight: 600;
+    font-size: 13px;
+    color: #1f2937;
+    margin-bottom: 2px;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+.character-count-main {
+    font-size: 11px;
+    color: #6b7280;
+    font-family: 'NanumSquareRound', Arial, sans-serif;
+}
+
+
+.character-locked-badge-main {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.unowned-text-main {
+    color: #9ca3af !important;
+}
+
+/* Success checkmark for collected characters */
+.character-card-main.owned::after {
+    content: '✓';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #10b981;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Responsive Design for Characters Tab */
+@media (max-width: 768px) {
+    .character-gacha-card {
+        margin: 15px 0 20px 0;
+    }
+    
+    .character-gacha-pull-btn {
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+    
+    .character-collection-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+    }
+    
+    .character-image-main {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+@media (max-width: 480px) {
+    .character-gacha-card {
+        margin: 12px 0 16px 0;
+    }
+    
+    .character-gacha-pull-btn {
+        padding: 12px 18px;
+        font-size: 14px;
+    }
+    
+    .character-collection-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 8px;
+    }
+    
+    .character-card-main {
+        padding: 10px;
+    }
+    
+    .character-image-main {
+        width: 45px;
+        height: 45px;
+    }
+}
+

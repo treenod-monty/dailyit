@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm i:*)",
+      "Bash(sudo npm i -g @anthropic-ai/claude-code)",
+      "Bash(npx:*)",
+      "Bash(open index.html)",
+      "WebFetch(domain:lucide.dev)",
+      "Bash(open /Users/monty/Project/PokoHabbit/game.html)",
+      "Bash(open:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
