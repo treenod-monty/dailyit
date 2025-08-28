@@ -1076,10 +1076,15 @@ async function completeCircleSession() {
     } else {
         // 집중 타이머에서 시작한 경우만 습관 등록 모달 표시
         // currentSession 정보를 미리 저장
+        const durationSeconds = currentSession.duration;
+        const isMinuteUnit = durationSeconds >= 60;
+        
         completedSessionData = {
             goal: currentSession.goal,
-            duration: currentSession.duration,
-            durationMinutes: Math.floor(currentSession.duration / 60)
+            duration: durationSeconds,
+            durationMinutes: Math.floor(durationSeconds / 60),
+            timeValue: isMinuteUnit ? Math.floor(durationSeconds / 60) : durationSeconds,
+            timeUnit: isMinuteUnit ? 'minutes' : 'seconds'
         };
         
         console.log('📝 습관 등록 모달 표시를 위한 데이터 저장:', completedSessionData);
@@ -1832,7 +1837,18 @@ async function confirmAddHabit() {
     }
     
     const cadence = activeCadence?.getAttribute('data-cadence') || 'daily';
-    const defaultTime = completedSessionData ? completedSessionData.durationMinutes : 60;
+    
+    // 시간 단위 자동 판단: 집중 타이머 데이터가 있으면 해당 단위 사용, 없으면 기본값(60분)
+    let defaultTime, timeUnit;
+    if (completedSessionData) {
+        defaultTime = completedSessionData.timeValue;
+        timeUnit = completedSessionData.timeUnit;
+        console.log(`⏰ 집중 타이머 기반 시간 설정: ${defaultTime}${timeUnit === 'minutes' ? '분' : '초'}`);
+    } else {
+        defaultTime = 60;
+        timeUnit = 'minutes';
+        console.log('⏰ 기본 시간 설정: 60분');
+    }
     
     // Create new habit
     const newHabit = {
@@ -1840,6 +1856,7 @@ async function confirmAddHabit() {
         name: habitName,
         cadence: cadence,
         defaultTime: defaultTime,
+        timeUnit: timeUnit,
         createdAt: Date.now()
     };
     
@@ -2123,7 +2140,7 @@ async function renderHabitsList() {
             habitItem.innerHTML = `
                 <div class="habit-info">
                     <h4 class="habit-title">${habit.name}</h4>
-                    <p class="habit-duration">${habit.cadence === 'daily' ? '일간' : '주간'} · 기본 시간: ${habit.defaultTime}분</p>
+                    <p class="habit-duration">${habit.cadence === 'daily' ? '일간' : '주간'} · 기본 시간: ${habit.defaultTime}${(habit.timeUnit || 'minutes') === 'seconds' ? '초' : '분'}</p>
                 </div>
                 <div class="habit-actions">
                     <button class="habit-delete-btn" title="삭제"><i data-lucide="trash-2"></i></button>
@@ -2256,11 +2273,19 @@ function startHabitFromList(habitId) {
     const habit = userHabits.find(h => h.id === habitId);
     if (!habit) return;
     
+    // 시간 단위에 따라 초로 변환 (기존 습관들은 'minutes'가 기본값)
+    const timeUnit = habit.timeUnit || 'minutes';
+    const durationInSeconds = timeUnit === 'seconds' 
+        ? habit.defaultTime 
+        : habit.defaultTime * 60;
+    
+    console.log(`⏰ 습관 시작: ${habit.name}, ${habit.defaultTime}${timeUnit === 'seconds' ? '초' : '분'} (${durationInSeconds}초)`);
+    
     // Create session from habit
     currentSession = {
         goal: habit.name,
-        duration: habit.defaultTime * 60, // Convert to seconds
-        remainingTime: habit.defaultTime * 60,
+        duration: durationInSeconds,
+        remainingTime: durationInSeconds,
         startTime: Date.now(),
         isPaused: false,
         source: 'habit',
