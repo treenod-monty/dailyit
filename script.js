@@ -326,6 +326,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         await initializeApp();
         setupEventListeners();
         await loadUserData();
+        await loadCharacterGameData(); // 캐릭터 게임 데이터 로드 추가
         updateUI();
         adjustContainerPadding();
     } catch (error) {
@@ -1626,59 +1627,170 @@ function showSessionCompleteModal(earnedPoints) {
 // ========================================
 async function saveUserData() {
     try {
+        console.log('💾 사용자 데이터 저장 시작:', { points: userPoints, partner: currentPartner });
+        
+        let savedToIndexedDB = false;
+        
         if (dailytDB) {
-            // IndexedDB에 저장
-            await dailytDB.saveUserData({
-                points: userPoints,
-                currentPartner: currentPartner
-            });
-        } else {
-            // 폴백: localStorage에 저장 (습관 제외, 포인트/파트너만)
+            try {
+                // IndexedDB에 저장
+                await dailytDB.saveUserData({
+                    points: userPoints,
+                    currentPartner: currentPartner
+                });
+                savedToIndexedDB = true;
+                console.log('✅ IndexedDB에 사용자 데이터 저장 완료');
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 저장 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB 저장 실패 시 또는 dailytDB가 없을 때 localStorage 사용
+        if (!savedToIndexedDB) {
             const userData = {
                 points: userPoints,
                 partner: currentPartner,
                 lastSaved: Date.now()
             };
             localStorage.setItem('dailit_data', JSON.stringify(userData));
+            console.log('✅ localStorage에 사용자 데이터 저장 완료');
         }
+        
+        // 항상 백업으로도 저장
+        const backupUserData = {
+            points: userPoints,
+            currentPartner: currentPartner,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('userDataBackup', JSON.stringify(backupUserData));
+        
     } catch (error) {
-        console.error('데이터 저장 중 오류:', error);
+        console.error('❌ 사용자 데이터 저장 완전 실패:', error);
+        
+        // 마지막 수단으로 간단한 형태로 저장
+        try {
+            localStorage.setItem('emergencyUserPoints', userPoints.toString());
+            localStorage.setItem('emergencyCurrentPartner', currentPartner || '');
+        } catch (emergencyError) {
+            console.error('❌ 비상 사용자 데이터 저장도 실패:', emergencyError);
+        }
     }
 }
 
 async function loadUserData() {
+    console.log('💾 사용자 데이터 로드 시작');
+    let dataLoaded = false;
+    
     try {
+        // 1차: IndexedDB에서 로드 시도
         if (dailytDB) {
-            // IndexedDB에서 데이터 로드 (포인트/파트너만)
-            const userData = await dailytDB.getUserData();
-            userPoints = userData?.points || 100;
-            currentPartner = userData?.currentPartner || null;
-            
-            // 습관은 별도로 DailytDB에서 로드
-            const habits = await dailytDB.getHabits();
-            userHabits = habits || [];
-        } else {
-            // 폴백: localStorage에서 로드 (포인트/파트너만)
+            try {
+                const userData = await dailytDB.getUserData();
+                if (userData && userData.points !== undefined) {
+                    userPoints = userData.points;
+                    currentPartner = userData.currentPartner || null;
+                    dataLoaded = true;
+                    console.log('✅ IndexedDB에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                }
+                
+                // 습관은 별도로 로드
+                const habits = await dailytDB.getHabits();
+                userHabits = habits || [];
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 로드 실패:', dbError);
+            }
+        }
+        
+        // 2차: localStorage 기본 데이터에서 로드 시도
+        if (!dataLoaded) {
             const saved = localStorage.getItem('dailit_data');
             if (saved) {
-                const userData = JSON.parse(saved);
-                userPoints = userData.points || 100;
-                currentPartner = userData.partner || null;
-            } else {
-                // 기본값 설정
-                userPoints = 100;
-                currentPartner = null;
+                try {
+                    const userData = JSON.parse(saved);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 데이터 파싱 실패:', parseError);
+                }
             }
-            // 습관은 빈 배열로 초기화 (DailytDB 없으면 습관 기능 비활성화)
+        }
+        
+        // 3차: localStorage 백업 데이터에서 로드 시도
+        if (!dataLoaded) {
+            const backupData = localStorage.getItem('userDataBackup');
+            if (backupData) {
+                try {
+                    const userData = JSON.parse(backupData);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage 백업에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 백업 데이터 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 4차: localStorage 개별 항목에서 로드 시도
+        if (!dataLoaded) {
+            const pointsStr = localStorage.getItem('userPoints');
+            const partnerStr = localStorage.getItem('currentPartner');
+            if (pointsStr !== null) {
+                try {
+                    userPoints = parseInt(pointsStr, 10);
+                    currentPartner = partnerStr !== 'null' && partnerStr !== 'undefined' ? partnerStr : null;
+                    dataLoaded = true;
+                    console.log('✅ localStorage 개별 항목에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 개별 항목 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 5차: localStorage 비상 데이터에서 로드 시도
+        if (!dataLoaded) {
+            const emergencyData = localStorage.getItem('emergencyUserData');
+            if (emergencyData) {
+                try {
+                    const userData = JSON.parse(emergencyData);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage 비상 데이터에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 비상 데이터 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 최종: 기본값 설정
+        if (!dataLoaded) {
+            console.log('⚠️ 저장된 데이터를 찾을 수 없음, 기본값으로 초기화');
+            userPoints = 100;
+            currentPartner = null;
+            userHabits = [];
+        } else if (!dailytDB) {
+            // DailytDB가 없으면 습관 기능 비활성화
             userHabits = [];
         }
+        
     } catch (error) {
-        console.error('데이터 로드 중 오류:', error);
+        console.error('❌ 데이터 로드 중 치명적 오류:', error);
         // 기본값으로 초기화
         userPoints = 100;
         currentPartner = null;
         userHabits = [];
     }
+    
+    console.log('💾 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner, habits: userHabits.length });
 }
 
 // localStorage에서 IndexedDB로 마이그레이션
@@ -2281,38 +2393,42 @@ function setupCharacterGachaButton() {
 
 // 메인 페이지용 캐릭터 데이터 로드
 async function loadCharacterGameData() {
-    if (typeof loadGameData === 'function') {
-        await loadGameData();
-    }
-    if (typeof ensurePokotaOwned === 'function') {
-        await ensurePokotaOwned();
-    }
-}
-
-// 메인 페이지용 캐릭터 포인트 업데이트 (현재는 버튼에서 처리)
-function updateCharacterPoints() {
-    // 포인트 표시는 버튼에서 처리하므로 빈 함수
-}
-
-// 메인 페이지용 가차 버튼 업데이트
-function updateCharacterGachaPullButton() {
-    const gachaPullBtn = document.getElementById('characterGachaPull');
-    const gachaBtnText = gachaPullBtn?.querySelector('.character-gacha-btn-text');
-    const points = userPoints;
-    
-    // Update button text and state
-    if (gachaBtnText) {
-        gachaBtnText.textContent = '캐릭터 뽑기';
-        
-        if (points >= 150) {
-            gachaPullBtn.classList.add('active');
-            gachaPullBtn.disabled = false;
-        } else {
-            gachaPullBtn.classList.remove('active');
-            gachaPullBtn.disabled = true;
+    try {
+        // 게임 데이터 로드
+        if (typeof loadGameData === 'function') {
+            await loadGameData();
         }
+        if (typeof ensurePokotaOwned === 'function') {
+            await ensurePokotaOwned();
+        }
+        
+        // UI 업데이트
+        if (typeof updateCharacterGachaPullButton === 'function') {
+            updateCharacterGachaPullButton();
+        }
+        if (typeof updateCharacterCollectionAndOwnedCounts === 'function') {
+            updateCharacterCollectionAndOwnedCounts();
+        }
+        if (typeof updateCharacterCollectionMain === 'function') {
+            updateCharacterCollectionMain();
+        }
+        
+        // 가차 버튼 이벤트 리스너 설정
+        setupCharacterGachaButton();
+        
+    } catch (error) {
+        console.error('캐릭터 게임 데이터 로드 실패:', error);
     }
 }
+
+// 메인 페이지용 캐릭터 포인트 업데이트
+function updateCharacterPoints() {
+    if (typeof updateCharacterGachaPullButton === 'function') {
+        updateCharacterGachaPullButton();
+    }
+}
+
+// 메인 페이지용 가차 버튼 업데이트는 game.js에서 처리
 
 // 메인 페이지용 컬렉션 통계 업데이트
 function updateCharacterCollectionAndOwnedCounts() {

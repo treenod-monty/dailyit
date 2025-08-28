@@ -215,28 +215,92 @@ let appState = {
 // 게임 데이터 로드
 async function loadGameData() {
     try {
+        console.log('🎮 게임 데이터 로드 시작');
+        let loadedFromIndexedDB = false;
+        
         if (window.DailytDB && typeof window.DailytDB.getAllGameData === 'function') {
-            const gameData = await window.DailytDB.getAllGameData();
+            try {
+                const gameData = await window.DailytDB.getAllGameData();
+                
+                if (gameData && Object.keys(gameData).length > 0) {
+                    // 캐릭터 데이터 로드
+                    appState.gacha.characters = gameData.userCharacters || [];
+                    appState.gacha.selectedCharacter = gameData.selectedCharacter || null;
+                    appState.gacha.selectedCostumes = gameData.selectedCostumes || {};
+                    appState.gacha.ownedCostumes = gameData.ownedCostumes || {};
+                    loadedFromIndexedDB = true;
+                    
+                    console.log('✅ IndexedDB에서 게임 데이터 로드 완료:', {
+                        characters: appState.gacha.characters.length,
+                        selectedCharacter: appState.gacha.selectedCharacter,
+                        costumes: Object.keys(appState.gacha.ownedCostumes).length
+                    });
+                }
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 로드 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB에서 로드 실패하거나 데이터가 없으면 localStorage에서 로드
+        if (!loadedFromIndexedDB) {
+            console.log('📦 localStorage에서 게임 데이터 로드 시도');
             
-            // 캐릭터 데이터 로드
-            appState.gacha.characters = gameData.userCharacters || [];
-            appState.gacha.selectedCharacter = gameData.selectedCharacter || null;
-            appState.gacha.selectedCostumes = gameData.selectedCostumes || {};
-            appState.gacha.ownedCostumes = gameData.ownedCostumes || {};
-            
-            console.log('🎮 게임 데이터 로드 완료');
-        } else {
-            console.warn('⚠️ DailytDB를 사용할 수 없어 localStorage에서 로드');
-            
-            // localStorage 폴백
-            appState.gacha.characters = JSON.parse(localStorage.getItem('userCharacters') || '[]');
-            appState.gacha.selectedCharacter = localStorage.getItem('selectedCharacter');
-            appState.gacha.selectedCostumes = JSON.parse(localStorage.getItem('selectedCostumes') || '{}');
-            appState.gacha.ownedCostumes = JSON.parse(localStorage.getItem('ownedCostumes') || '{}');
+            // 먼저 백업 데이터 확인
+            const backupData = localStorage.getItem('gameDataBackup');
+            if (backupData) {
+                try {
+                    const backup = JSON.parse(backupData);
+                    appState.gacha.characters = backup.characters || [];
+                    appState.gacha.selectedCharacter = backup.selectedCharacter || null;
+                    appState.gacha.selectedCostumes = backup.selectedCostumes || {};
+                    appState.gacha.ownedCostumes = backup.ownedCostumes || {};
+                    console.log('✅ 백업 데이터에서 로드 완료');
+                } catch (backupError) {
+                    console.warn('⚠️ 백업 데이터 파싱 실패:', backupError);
+                    // 개별 localStorage 아이템에서 로드
+                    loadFromIndividualLocalStorage();
+                }
+            } else {
+                // 개별 localStorage 아이템에서 로드
+                loadFromIndividualLocalStorage();
+            }
         }
     } catch (error) {
-        console.error('게임 데이터 로드 실패:', error);
-        // 기본값으로 초기화
+        console.error('❌ 게임 데이터 로드 완전 실패:', error);
+        
+        // 비상 데이터 확인
+        try {
+            const emergencyData = localStorage.getItem('emergencyGameData');
+            if (emergencyData) {
+                const emergency = JSON.parse(emergencyData);
+                appState.gacha.characters = emergency.characters || [];
+                appState.gacha.selectedCharacter = emergency.selectedCharacter || null;
+                console.log('🚨 비상 데이터에서 복구 완료');
+            }
+        } catch (emergencyError) {
+            console.error('❌ 비상 데이터 복구도 실패:', emergencyError);
+        }
+        
+        // 모든 복구 실패 시 기본값으로 초기화
+        if (!appState.gacha.characters) {
+            appState.gacha.characters = [];
+            appState.gacha.selectedCharacter = null;
+            appState.gacha.selectedCostumes = {};
+            appState.gacha.ownedCostumes = {};
+            console.log('🔄 기본값으로 초기화');
+        }
+    }
+}
+
+function loadFromIndividualLocalStorage() {
+    try {
+        appState.gacha.characters = JSON.parse(localStorage.getItem('userCharacters') || '[]');
+        appState.gacha.selectedCharacter = localStorage.getItem('selectedCharacter');
+        appState.gacha.selectedCostumes = JSON.parse(localStorage.getItem('selectedCostumes') || '{}');
+        appState.gacha.ownedCostumes = JSON.parse(localStorage.getItem('ownedCostumes') || '{}');
+        console.log('✅ 개별 localStorage에서 로드 완료');
+    } catch (error) {
+        console.error('❌ localStorage 개별 로드 실패:', error);
         appState.gacha.characters = [];
         appState.gacha.selectedCharacter = null;
         appState.gacha.selectedCostumes = {};
@@ -247,23 +311,62 @@ async function loadGameData() {
 // 게임 데이터 저장
 async function saveGameData() {
     try {
+        console.log('🎮 게임 데이터 저장 시작:', {
+            characters: appState.gacha.characters.length,
+            selectedCharacter: appState.gacha.selectedCharacter,
+            costumes: Object.keys(appState.gacha.ownedCostumes).length
+        });
+
+        let savedToIndexedDB = false;
+        
         if (window.DailytDB && typeof window.DailytDB.setGameData === 'function') {
-            // IndexedDB에 저장
-            await Promise.all([
-                window.DailytDB.setGameData('userCharacters', appState.gacha.characters),
-                window.DailytDB.setGameData('selectedCharacter', appState.gacha.selectedCharacter),
-                window.DailytDB.setGameData('selectedCostumes', appState.gacha.selectedCostumes),
-                window.DailytDB.setGameData('ownedCostumes', appState.gacha.ownedCostumes)
-            ]);
-        } else {
-            // localStorage 폴백
+            try {
+                // IndexedDB에 저장
+                await Promise.all([
+                    window.DailytDB.setGameData('userCharacters', appState.gacha.characters),
+                    window.DailytDB.setGameData('selectedCharacter', appState.gacha.selectedCharacter),
+                    window.DailytDB.setGameData('selectedCostumes', appState.gacha.selectedCostumes),
+                    window.DailytDB.setGameData('ownedCostumes', appState.gacha.ownedCostumes)
+                ]);
+                savedToIndexedDB = true;
+                console.log('✅ IndexedDB에 게임 데이터 저장 완료');
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 저장 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB 저장 실패 시 또는 DailytDB가 없을 때 localStorage 사용
+        if (!savedToIndexedDB) {
             localStorage.setItem('userCharacters', JSON.stringify(appState.gacha.characters));
-            localStorage.setItem('selectedCharacter', appState.gacha.selectedCharacter);
+            localStorage.setItem('selectedCharacter', appState.gacha.selectedCharacter || '');
             localStorage.setItem('selectedCostumes', JSON.stringify(appState.gacha.selectedCostumes));
             localStorage.setItem('ownedCostumes', JSON.stringify(appState.gacha.ownedCostumes));
+            console.log('✅ localStorage에 게임 데이터 저장 완료');
         }
+        
+        // 항상 localStorage에도 백업으로 저장
+        const backupData = {
+            characters: appState.gacha.characters,
+            selectedCharacter: appState.gacha.selectedCharacter,
+            selectedCostumes: appState.gacha.selectedCostumes,
+            ownedCostumes: appState.gacha.ownedCostumes,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('gameDataBackup', JSON.stringify(backupData));
+        
     } catch (error) {
-        console.error('게임 데이터 저장 실패:', error);
+        console.error('❌ 게임 데이터 저장 완전 실패:', error);
+        
+        // 마지막 수단으로 간단한 형태로 저장
+        try {
+            localStorage.setItem('emergencyGameData', JSON.stringify({
+                characters: appState.gacha.characters,
+                selectedCharacter: appState.gacha.selectedCharacter,
+                timestamp: Date.now()
+            }));
+        } catch (emergencyError) {
+            console.error('❌ 비상 데이터 저장도 실패:', emergencyError);
+        }
     }
 }
 
