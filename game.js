@@ -607,9 +607,9 @@ async function performGachaPull() {
 
 // 랜덤 캐릭터 뽑기 로직
 function drawRandomCharacter() {
-    // 이미 보유한 캐릭터 타입 목록
-    const ownedCharacterTypes = appState.gacha.characters.map(char => char.type);
-    console.log('🎯 현재 보유 캐릭터 타입:', ownedCharacterTypes);
+    // 이미 보유한 고유 캐릭터 타입 목록 (중복 제거)
+    const ownedCharacterTypes = [...new Set(appState.gacha.characters.map(char => char.type))];
+    console.log('🎯 현재 보유 고유 캐릭터 타입:', ownedCharacterTypes);
     
     // 보유하지 않은 캐릭터들만 필터링
     const unownedCharacters = Object.values(characterDatabase).filter(char => 
@@ -809,8 +809,13 @@ function updateCharacterCollectionMain() {
 // 모든 캐릭터를 보유했는지 확인
 function isAllCharactersOwned() {
     const totalCharacters = Object.keys(characterDatabase).length;
-    const ownedCharacters = appState.gacha.characters.length;
-    return ownedCharacters >= totalCharacters;
+    // 고유한 캐릭터 타입만 세기
+    const uniqueOwnedTypes = [...new Set(appState.gacha.characters.map(char => char.type))];
+    const ownedCharacterTypes = uniqueOwnedTypes.length;
+    
+    console.log(`🎯 캐릭터 수집 상태: ${ownedCharacterTypes}/${totalCharacters} (보유 타입: ${uniqueOwnedTypes.join(', ')})`);
+    
+    return ownedCharacterTypes >= totalCharacters;
 }
 
 // 메인 페이지 가차 버튼 업데이트
