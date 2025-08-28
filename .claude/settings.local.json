@@ -7,7 +7,11 @@
       "Bash(open index.html)",
       "WebFetch(domain:lucide.dev)",
       "Bash(open /Users/monty/Project/PokoHabbit/game.html)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(gh repo list:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
