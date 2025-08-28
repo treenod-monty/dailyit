@@ -2197,7 +2197,7 @@ function setupCharacterGachaButton() {
             } else {
                 // 포인트 부족하면 토스트 표시
                 const needed = 150 - points;
-                showToast(`${needed}포인트 부족`);
+                showToast(`${needed} 포인트가 부족해`);
             }
         });
     }
