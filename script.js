@@ -670,6 +670,12 @@ function cleanupModalCallbacks() {
 // TAB MANAGEMENT
 // ========================================
 function switchTab(tabName) {
+    // 타이머가 돌고 있으면 포커스 탭 이외의 탭 이동 차단
+    if (currentSession && focusState === 'progress' && tabName !== 'focus') {
+        showToast('타이머가 돌아가는 중에는 다른 탭으로 이동할 수 없어요! 🕒');
+        return;
+    }
+    
     // Remove active class from all tabs and contents
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
