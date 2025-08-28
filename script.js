@@ -2801,6 +2801,9 @@ function updateUI() {
         partnerIcon.style.display = 'none';
     }
     
+    // 타이머 캐릭터 이미지 업데이트
+    updateTimerCharacterImage();
+    
     // 파트너 카드 버튼 상태 업데이트
     updatePartnerButtons();
 }
@@ -2830,6 +2833,42 @@ function updatePartnerButtons() {
             }
         }
     });
+}
+
+// 타이머 캐릭터 이미지 업데이트
+function updateTimerCharacterImage() {
+    const characterImage = document.getElementById('characterImage');
+    const characterAvatar = document.getElementById('characterAvatar');
+    
+    if (!characterImage) return;
+    
+    // 선택된 캐릭터와 코스튬 정보 가져오기
+    if (typeof appState !== 'undefined' && appState.gacha && appState.gacha.selectedCharacter && typeof characterDatabase !== 'undefined') {
+        const selectedCharacterType = appState.gacha.selectedCharacter;
+        const character = characterDatabase[selectedCharacterType];
+        const selectedCostume = appState.gacha.selectedCostumes[selectedCharacterType];
+        
+        if (character) {
+            let imageSource = character.image; // 기본 캐릭터 이미지
+            let characterName = character.name;
+            
+            // 코스튬이 선택되어 있으면 코스튬 이미지 사용
+            if (selectedCostume && selectedCostume.image) {
+                imageSource = selectedCostume.image;
+            }
+            
+            // 이미지 src와 alt 업데이트
+            characterImage.src = imageSource;
+            characterImage.alt = characterName;
+            
+            console.log(`🎭 타이머 캐릭터 이미지 업데이트: ${characterName} (${imageSource})`);
+        }
+    } else {
+        // 기본값: 포코타
+        characterImage.src = './images/character/pokota.png';
+        characterImage.alt = '포코타';
+        console.log('🎭 타이머 캐릭터 이미지: 기본값 포코타');
+    }
 }
 
 // ========================================
