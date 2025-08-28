@@ -933,11 +933,12 @@ function stopCircleTimer() {
     
     showConfirmModal(
         '세션 종료',
-        '정말로 세션을 종료하시겠습니까?\\n진행된 내용은 저장되지 않습니다.',
-        () => {
+        '정말로 세션을 종료하시겠습니까?\n진행된 내용은 저장되지 않습니다.'
+    ).then((confirmed) => {
+        if (confirmed) {
             resetCircleSession();
         }
-    );
+    });
 }
 
 function completeCircleSession() {
