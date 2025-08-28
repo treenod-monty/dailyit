@@ -3799,11 +3799,47 @@ body.modal-open {
     width: 100%;
 }
 
+/* 최강 우선순위로 그리드 강제 적용 */
+div#costumeOptions div.costume-options-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px !important;
+    width: 100% !important;
+    justify-items: center !important;
+}
+
+.character-modal-body .costume-collection-grid .costume-options-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px !important;
+    width: 100% !important;
+    justify-items: center !important;
+}
+
 .costume-options-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 15px;
     padding: 10px 0;
+    width: 100% !important;
+}
+
+/* 데스크탑 환경을 위한 추가 강화 */
+@media (min-width: 481px) {
+    .costume-collection-grid .costume-options-grid,
+    #costumeOptions .costume-options-grid,
+    .costume-options-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 20px !important;
+        width: 100% !important;
+        justify-items: center !important;
+    }
+    
+    .costume-option {
+        max-width: 160px !important;
+        width: 100% !important;
+    }
 }
 
 /* Mobile responsive */

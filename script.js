@@ -2727,11 +2727,13 @@ window.DailytDevTools = {
         if (typeof isAllCharactersOwned === 'function') {
             const isComplete = isAllCharactersOwned();
             const totalCharacters = typeof characterDatabase !== 'undefined' ? Object.keys(characterDatabase).length : 'unknown';
-            const ownedCount = typeof appState !== 'undefined' ? appState.gacha.characters.length : 'unknown';
+            const ownedInstances = typeof appState !== 'undefined' ? appState.gacha.characters.length : 'unknown';
+            const uniqueTypes = typeof appState !== 'undefined' ? [...new Set(appState.gacha.characters.map(char => char.type))] : [];
             
             console.log('📊 수집 현황:');
-            console.log(`- 보유 캐릭터: ${ownedCount}개`);
-            console.log(`- 전체 캐릭터: ${totalCharacters}개`);
+            console.log(`- 보유 캐릭터 인스턴스: ${ownedInstances}개`);
+            console.log(`- 보유 고유 타입: ${uniqueTypes.length}개 (${uniqueTypes.join(', ')})`);
+            console.log(`- 전체 캐릭터 타입: ${totalCharacters}개`);
             console.log(`- 수집 완료: ${isComplete ? '✅' : '❌'}`);
             
             return isComplete;
