@@ -326,6 +326,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         await initializeApp();
         setupEventListeners();
         await loadUserData();
+        await loadCharacterGameData(); // 캐릭터 게임 데이터 로드 추가
         updateUI();
         adjustContainerPadding();
     } catch (error) {
@@ -361,9 +362,9 @@ async function initializeApp() {
 // ========================================
 function setupEventListeners() {
     // Tab switching
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
         if (e.target.matches('.tab-btn')) {
-            switchTab(e.target.getAttribute('data-tab'));
+            await switchTab(e.target.getAttribute('data-tab'));
         }
     });
 
@@ -437,9 +438,16 @@ function setupEventListeners() {
     // 모달 관련 이벤트들
     setupModalEvents();
     
-    // Custom minutes input change (for circle timer)
-    document.getElementById('customMinutes')?.addEventListener('input', function() {
+    // Custom time input change (for circle timer)
+    document.getElementById('customTimeValue')?.addEventListener('input', function() {
         updateCircleStartButton();
+    });
+    
+    // Time unit toggle buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.unit-btn')) {
+            toggleTimeUnit(e.target);
+        }
     });
     
     
@@ -669,7 +677,7 @@ function cleanupModalCallbacks() {
 // ========================================
 // TAB MANAGEMENT
 // ========================================
-function switchTab(tabName) {
+async function switchTab(tabName) {
     // 타이머가 돌고 있으면 모든 탭 이동 차단
     if (currentSession && focusState === 'progress') {
         showToast('타이머가 돌아가는 중에는 다른 탭으로 이동할 수 없어요! 🕒');
@@ -696,7 +704,7 @@ function switchTab(tabName) {
     
     // Load characters when switching to characters tab
     if (tabName === 'characters') {
-        loadCharactersTab();
+        await loadCharactersTab();
     }
 }
 
@@ -728,18 +736,32 @@ function resetFocusState() {
     // Reset all inputs
     const circleGoalInput = document.getElementById('circleGoalInput');
     const customTimeInput = document.getElementById('customTimeInput');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     const startTimerBtn = document.getElementById('startTimerBtn');
     
     if (circleGoalInput) circleGoalInput.value = '';
     if (customTimeInput) customTimeInput.style.display = 'none';
-    if (customMinutes) customMinutes.value = '';
+    if (customTimeValue) customTimeValue.value = '';
     if (startTimerBtn) startTimerBtn.disabled = true;
     
     // Reset time chips
     document.querySelectorAll('.time-chip').forEach(chip => chip.classList.remove('active'));
     const defaultChip = document.querySelector('.time-chip[data-time="60"]');
     if (defaultChip) defaultChip.classList.add('active');
+    
+    // Reset unit toggle to minutes
+    document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
+    const minutesBtn = document.querySelector('.unit-btn[data-unit="minutes"]');
+    if (minutesBtn) {
+        minutesBtn.classList.add('active');
+        const unitLabel = document.getElementById('customTimeUnit');
+        const timeInput = document.getElementById('customTimeValue');
+        if (unitLabel) unitLabel.textContent = '분';
+        if (timeInput) {
+            timeInput.setAttribute('max', '300');
+            timeInput.setAttribute('placeholder', '분');
+        }
+    }
 }
 
 function onCircleTap() {
@@ -769,11 +791,45 @@ function selectTimeChip(chip) {
     if (chip.getAttribute('data-time') === 'custom') {
         if (customTimeInput) customTimeInput.style.display = 'block';
         setTimeout(() => {
-            const customMinutes = document.getElementById('customMinutes');
-            if (customMinutes) customMinutes.focus();
+            const customTimeValue = document.getElementById('customTimeValue');
+            if (customTimeValue) customTimeValue.focus();
         }, 100);
     } else {
         if (customTimeInput) customTimeInput.style.display = 'none';
+    }
+    
+    updateCircleStartButton();
+}
+
+function toggleTimeUnit(button) {
+    const container = button.closest('.time-unit-toggle');
+    if (!container) return;
+    
+    // Remove active from all unit buttons
+    container.querySelectorAll('.unit-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active to clicked button
+    button.classList.add('active');
+    
+    // Update unit label and input constraints
+    const unit = button.getAttribute('data-unit');
+    const unitLabel = document.getElementById('customTimeUnit');
+    const timeInput = document.getElementById('customTimeValue');
+    
+    if (unit === 'minutes') {
+        if (unitLabel) unitLabel.textContent = '분';
+        if (timeInput) {
+            timeInput.setAttribute('max', '300'); // 5시간까지
+            timeInput.setAttribute('placeholder', '분');
+        }
+    } else if (unit === 'seconds') {
+        if (unitLabel) unitLabel.textContent = '초';
+        if (timeInput) {
+            timeInput.setAttribute('max', '3600'); // 1시간까지
+            timeInput.setAttribute('placeholder', '초');
+        }
     }
     
     updateCircleStartButton();
@@ -799,7 +855,7 @@ function updateCircleStartButton() {
     const goalInput = document.getElementById('circleGoalInput');
     const startBtn = document.getElementById('startTimerBtn');
     const activeChip = document.querySelector('.time-chip.active');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     
     if (!goalInput || !startBtn) return;
     
@@ -809,7 +865,7 @@ function updateCircleStartButton() {
     if (activeChip) {
         const timeValue = activeChip.getAttribute('data-time');
         if (timeValue === 'custom') {
-            hasValidTime = customMinutes && customMinutes.value && parseInt(customMinutes.value) > 0;
+            hasValidTime = customTimeValue && customTimeValue.value && parseInt(customTimeValue.value) > 0;
         } else {
             hasValidTime = true;
         }
@@ -821,27 +877,34 @@ function updateCircleStartButton() {
 function startCircleTimer() {
     const goalInput = document.getElementById('circleGoalInput');
     const activeChip = document.querySelector('.time-chip.active');
-    const customMinutes = document.getElementById('customMinutes');
+    const customTimeValue = document.getElementById('customTimeValue');
     
     if (!goalInput || !activeChip) return;
     
     const goal = goalInput.value.trim();
-    let duration;
+    let durationInSeconds;
     
     const timeValue = activeChip.getAttribute('data-time');
     if (timeValue === 'custom') {
-        duration = parseInt(customMinutes.value);
+        const inputValue = parseInt(customTimeValue.value);
+        const activeUnit = document.querySelector('.unit-btn.active');
+        const unit = activeUnit ? activeUnit.getAttribute('data-unit') : 'minutes';
+        
+        if (unit === 'seconds') {
+            durationInSeconds = inputValue;
+        } else {
+            durationInSeconds = inputValue * 60; // 분을 초로 변환
+        }
     } else {
-        duration = parseFloat(timeValue);
+        durationInSeconds = parseFloat(timeValue) * 60; // 분을 초로 변환
     }
     
-    if (!goal || !duration || duration <= 0) {
+    if (!goal || !durationInSeconds || durationInSeconds <= 0) {
         showAlertModal('오류', '목표를 입력해줘 / 세션 시간을 선택해줘');
         return;
     }
     
-    // Create session (duration is in minutes, convert to seconds)
-    const durationInSeconds = Math.round(duration * 60);
+    // Create session
     currentSession = {
         goal: goal,
         duration: durationInSeconds,
@@ -938,11 +1001,12 @@ function stopCircleTimer() {
     
     showConfirmModal(
         '세션 종료',
-        '정말로 세션을 종료하시겠습니까?\\n진행된 내용은 저장되지 않습니다.',
-        () => {
+        '정말로 세션을 종료하시겠습니까?\n진행된 내용은 저장되지 않습니다.'
+    ).then((confirmed) => {
+        if (confirmed) {
             resetCircleSession();
         }
-    );
+    });
 }
 
 function completeCircleSession() {
@@ -960,8 +1024,15 @@ function completeCircleSession() {
     saveUserData();
     updateUI();
     
-    // Show completion modal
-    showAddHabitModal();
+    // 습관에서 시작한 경우 습관 등록 모달 생략
+    if (currentSession.source === 'habit') {
+        // 습관에서 시작한 경우 바로 완료 처리
+        resetCircleSession();
+        showToast('습관 완료! 50포인트 획득! 🎉');
+    } else {
+        // 집중 타이머에서 시작한 경우만 습관 등록 모달 표시
+        showAddHabitModal();
+    }
 }
 
 function resetCircleSession() {
@@ -1470,11 +1541,11 @@ async function confirmAddHabit() {
     };
     
     try {
-        if (dailytDB) {
+        if (window.DailytDB) {
             // IndexedDB에 저장
-            await dailytDB.addHabit(newHabit);
+            await window.DailytDB.addHabit(newHabit);
             // 세션 기록도 추가
-            await dailytDB.addSession({
+            await window.DailytDB.addSession({
                 habitId: newHabit.id,
                 goal: currentSession.goal,
                 duration: currentSession.duration,
@@ -1986,64 +2057,175 @@ function showSessionCompleteModal(earnedPoints) {
 // ========================================
 async function saveUserData() {
     try {
-        if (dailytDB) {
-            // IndexedDB에 저장
-            await dailytDB.saveUserData({
-                points: userPoints,
-                currentPartner: currentPartner
-            });
-        } else {
-            // 폴백: localStorage에 저장 (습관 제외, 포인트/파트너만)
+        console.log('💾 사용자 데이터 저장 시작:', { points: userPoints, partner: currentPartner });
+        
+        let savedToIndexedDB = false;
+        
+        if (window.DailytDB && typeof window.DailytDB.saveUserData === 'function') {
+            try {
+                // IndexedDB에 저장
+                await window.DailytDB.saveUserData({
+                    points: userPoints,
+                    currentPartner: currentPartner
+                });
+                savedToIndexedDB = true;
+                console.log('✅ IndexedDB에 사용자 데이터 저장 완료');
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 저장 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB 저장 실패 시 또는 window.DailytDB가 없을 때 localStorage 사용
+        if (!savedToIndexedDB) {
             const userData = {
                 points: userPoints,
                 partner: currentPartner,
                 lastSaved: Date.now()
             };
             localStorage.setItem('dailit_data', JSON.stringify(userData));
+            console.log('✅ localStorage에 사용자 데이터 저장 완료');
         }
+        
+        // 항상 백업으로도 저장
+        const backupUserData = {
+            points: userPoints,
+            currentPartner: currentPartner,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('userDataBackup', JSON.stringify(backupUserData));
+        
     } catch (error) {
-        console.error('데이터 저장 중 오류:', error);
+        console.error('❌ 사용자 데이터 저장 완전 실패:', error);
+        
+        // 마지막 수단으로 간단한 형태로 저장
+        try {
+            localStorage.setItem('emergencyUserPoints', userPoints.toString());
+            localStorage.setItem('emergencyCurrentPartner', currentPartner || '');
+        } catch (emergencyError) {
+            console.error('❌ 비상 사용자 데이터 저장도 실패:', emergencyError);
+        }
     }
 }
 
 async function loadUserData() {
+    console.log('💾 사용자 데이터 로드 시작');
+    let dataLoaded = false;
+    
     try {
-        if (dailytDB) {
-            // IndexedDB에서 데이터 로드 (포인트/파트너만)
-            const userData = await dailytDB.getUserData();
-            userPoints = userData?.points || 100;
-            currentPartner = userData?.currentPartner || null;
-            
-            // 습관은 별도로 DailytDB에서 로드
-            const habits = await dailytDB.getHabits();
-            userHabits = habits || [];
-        } else {
-            // 폴백: localStorage에서 로드 (포인트/파트너만)
+        // 1차: IndexedDB에서 로드 시도
+        if (window.DailytDB) {
+            try {
+                const userData = await window.DailytDB.getUserData();
+                if (userData && userData.points !== undefined) {
+                    userPoints = userData.points;
+                    currentPartner = userData.currentPartner || null;
+                    dataLoaded = true;
+                    console.log('✅ IndexedDB에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                }
+                
+                // 습관은 별도로 로드
+                const habits = await window.DailytDB.getHabits();
+                userHabits = habits || [];
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 로드 실패:', dbError);
+            }
+        }
+        
+        // 2차: localStorage 기본 데이터에서 로드 시도
+        if (!dataLoaded) {
             const saved = localStorage.getItem('dailit_data');
             if (saved) {
-                const userData = JSON.parse(saved);
-                userPoints = userData.points || 100;
-                currentPartner = userData.partner || null;
-            } else {
-                // 기본값 설정
-                userPoints = 100;
-                currentPartner = null;
+                try {
+                    const userData = JSON.parse(saved);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 데이터 파싱 실패:', parseError);
+                }
             }
-            // 습관은 빈 배열로 초기화 (DailytDB 없으면 습관 기능 비활성화)
+        }
+        
+        // 3차: localStorage 백업 데이터에서 로드 시도
+        if (!dataLoaded) {
+            const backupData = localStorage.getItem('userDataBackup');
+            if (backupData) {
+                try {
+                    const userData = JSON.parse(backupData);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage 백업에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 백업 데이터 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 4차: localStorage 개별 항목에서 로드 시도
+        if (!dataLoaded) {
+            const pointsStr = localStorage.getItem('userPoints');
+            const partnerStr = localStorage.getItem('currentPartner');
+            if (pointsStr !== null) {
+                try {
+                    userPoints = parseInt(pointsStr, 10);
+                    currentPartner = partnerStr !== 'null' && partnerStr !== 'undefined' ? partnerStr : null;
+                    dataLoaded = true;
+                    console.log('✅ localStorage 개별 항목에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 개별 항목 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 5차: localStorage 비상 데이터에서 로드 시도
+        if (!dataLoaded) {
+            const emergencyData = localStorage.getItem('emergencyUserData');
+            if (emergencyData) {
+                try {
+                    const userData = JSON.parse(emergencyData);
+                    if (userData.points !== undefined) {
+                        userPoints = userData.points;
+                        currentPartner = userData.partner || null;
+                        dataLoaded = true;
+                        console.log('✅ localStorage 비상 데이터에서 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner });
+                    }
+                } catch (parseError) {
+                    console.warn('⚠️ localStorage 비상 데이터 파싱 실패:', parseError);
+                }
+            }
+        }
+        
+        // 최종: 기본값 설정
+        if (!dataLoaded) {
+            console.log('⚠️ 저장된 데이터를 찾을 수 없음, 기본값으로 초기화');
+            userPoints = 100;
+            currentPartner = null;
+            userHabits = [];
+        } else if (!window.DailytDB) {
+            // DailytDB가 없으면 습관 기능 비활성화
             userHabits = [];
         }
+        
     } catch (error) {
-        console.error('데이터 로드 중 오류:', error);
+        console.error('❌ 데이터 로드 중 치명적 오류:', error);
         // 기본값으로 초기화
         userPoints = 100;
         currentPartner = null;
         userHabits = [];
     }
+    
+    console.log('💾 사용자 데이터 로드 완료:', { points: userPoints, partner: currentPartner, habits: userHabits.length });
 }
 
 // localStorage에서 IndexedDB로 마이그레이션
 async function migrateFromLocalStorage() {
-    if (!dailytDB) return;
+    if (!window.DailytDB) return;
     
     try {
         const savedData = localStorage.getItem('dailit_data');
@@ -2053,7 +2235,7 @@ async function migrateFromLocalStorage() {
             
             // 사용자 데이터 마이그레이션
             if (data.points || data.partner) {
-                await dailytDB.saveUserData({
+                await window.DailytDB.saveUserData({
                     points: data.points || 100,
                     currentPartner: data.partner
                 });
@@ -2063,7 +2245,7 @@ async function migrateFromLocalStorage() {
             if (data.habits && data.habits.length > 0) {
                 for (const habit of data.habits) {
                     try {
-                        await dailytDB.addHabit(habit);
+                        await window.DailytDB.addHabit(habit);
                     } catch (error) {
                         console.warn('습관 마이그레이션 실패:', habit.name, error);
                     }
@@ -2186,12 +2368,84 @@ function selectBackupFile() {
 }
 
 // 개발자 도구용 - 브라우저 콘솔에서 사용 가능
-window.DailytDB = {
+window.DailytDevTools = {
     export: exportDailytData,
     import: selectBackupFile,
+    
+    // 데이터베이스 상태 확인
+    checkDB: async () => {
+        console.log('🔍 데이터베이스 상태 검사');
+        console.log('- window.DailytDB:', window.DailytDB ? '✅ 초기화됨' : '❌ null');
+        
+        if (window.DailytDB) {
+            try {
+                const userData = await window.DailytDB.getUserData();
+                console.log('- 사용자 데이터:', userData || '없음');
+                
+                const gameData = await window.DailytDB.getAllGameData();
+                console.log('- 게임 데이터:', gameData);
+                
+                const habits = await window.DailytDB.getHabits();
+                console.log('- 습관 데이터:', habits.length + '개');
+            } catch (error) {
+                console.error('- DB 접근 오류:', error);
+            }
+        }
+        
+        console.log('- 현재 전역 변수');
+        console.log('  * userPoints:', userPoints);
+        console.log('  * currentPartner:', currentPartner);
+        if (typeof appState !== 'undefined') {
+            console.log('  * appState.gacha.characters:', appState.gacha.characters.length + '개');
+        }
+    },
+    
+    // 데이터 강제 저장
+    forceSave: async () => {
+        console.log('💾 강제 저장 시작');
+        await saveUserData();
+        if (typeof saveGameData === 'function') {
+            await saveGameData();
+        }
+        console.log('💾 강제 저장 완료');
+    },
+    
+    // 캐릭터 데이터 완전 재설정
+    resetCharacters: async () => {
+        if (typeof resetCharacterDB === 'function' && confirm('모든 캐릭터 데이터를 초기화하시겠습니까?')) {
+            await resetCharacterDB();
+            console.log('🎮 캐릭터 데이터 완전 초기화 완료');
+        }
+    },
+    
+    // 테스트용: 포인트 추가
+    addPoints: (amount = 1500) => {
+        userPoints += amount;
+        saveUserData();
+        updateUI();
+        console.log(`💰 ${amount} 포인트 추가됨 (총: ${userPoints})`);
+    },
+    
+    // 테스트용: 전체 캐릭터 수집 완료 상태 확인
+    checkComplete: () => {
+        if (typeof isAllCharactersOwned === 'function') {
+            const isComplete = isAllCharactersOwned();
+            const totalCharacters = typeof characterDatabase !== 'undefined' ? Object.keys(characterDatabase).length : 'unknown';
+            const ownedCount = typeof appState !== 'undefined' ? appState.gacha.characters.length : 'unknown';
+            
+            console.log('📊 수집 현황:');
+            console.log(`- 보유 캐릭터: ${ownedCount}개`);
+            console.log(`- 전체 캐릭터: ${totalCharacters}개`);
+            console.log(`- 수집 완료: ${isComplete ? '✅' : '❌'}`);
+            
+            return isComplete;
+        }
+        return false;
+    },
+    
     clearAll: async () => {
-        if (dailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
-            const habits = await dailytDB.getHabits();
+        if (window.DailytDB && confirm('모든 데이터를 삭제하시겠습니까?')) {
+            const habits = await window.DailytDB.getHabits();
             for (const habit of habits) {
                 await dailytDB.deleteHabit(habit.id);
             }
@@ -2588,10 +2842,12 @@ function setupEditHabitEventListeners() {
 
 // 캐릭터 탭 로드
 async function loadCharactersTab() {
+    console.log('🎮 캐릭터 탭 로드 시작');
     try {
         // game.js의 캐릭터 관련 함수들 호출
         if (typeof loadCharacterGameData === 'function') {
             await loadCharacterGameData();
+            console.log('📦 캐릭터 게임 데이터 로드 완료');
         }
         if (typeof updateCharacterPoints === 'function') {
             updateCharacterPoints();
@@ -2623,16 +2879,30 @@ function setupCharacterGachaButton() {
         
         // 새 이벤트 리스너 추가
         document.getElementById('characterGachaPull').addEventListener('click', async function() {
+            console.log('🖱️ 캐릭터 뽑기 버튼 클릭됨');
+            
+            // 모든 캐릭터를 보유했는지 확인
+            if (typeof isAllCharactersOwned === 'function' && isAllCharactersOwned()) {
+                console.log('🎉 모든 캐릭터 보유 완료 - 클릭 무시');
+                showToast('🎉 모든 캐릭터를 수집 완료했습니다!');
+                return;
+            }
+            
             const points = userPoints;
+            console.log('💰 현재 포인트:', points);
             
             if (points >= 150) {
                 // 포인트가 충분하면 가차 실행
+                console.log('✅ 포인트 충분, 가차 실행');
                 if (typeof performCharacterGachaPull === 'function') {
                     await performCharacterGachaPull();
+                } else {
+                    console.error('❌ performCharacterGachaPull 함수를 찾을 수 없음');
                 }
             } else {
                 // 포인트 부족하면 토스트 표시
                 const needed = 150 - points;
+                console.log('❌ 포인트 부족:', needed, '포인트 필요');
                 showToast(`${needed} 포인트가 부족해`);
             }
         });
@@ -2641,38 +2911,42 @@ function setupCharacterGachaButton() {
 
 // 메인 페이지용 캐릭터 데이터 로드
 async function loadCharacterGameData() {
-    if (typeof loadGameData === 'function') {
-        await loadGameData();
-    }
-    if (typeof ensurePokotaOwned === 'function') {
-        await ensurePokotaOwned();
-    }
-}
-
-// 메인 페이지용 캐릭터 포인트 업데이트 (현재는 버튼에서 처리)
-function updateCharacterPoints() {
-    // 포인트 표시는 버튼에서 처리하므로 빈 함수
-}
-
-// 메인 페이지용 가차 버튼 업데이트
-function updateCharacterGachaPullButton() {
-    const gachaPullBtn = document.getElementById('characterGachaPull');
-    const gachaBtnText = gachaPullBtn?.querySelector('.character-gacha-btn-text');
-    const points = userPoints;
-    
-    // Update button text and state
-    if (gachaBtnText) {
-        gachaBtnText.textContent = '캐릭터 뽑기';
-        
-        if (points >= 150) {
-            gachaPullBtn.classList.add('active');
-            gachaPullBtn.disabled = false;
-        } else {
-            gachaPullBtn.classList.remove('active');
-            gachaPullBtn.disabled = true;
+    try {
+        // 게임 데이터 로드
+        if (typeof loadGameData === 'function') {
+            await loadGameData();
         }
+        if (typeof ensurePokotaOwned === 'function') {
+            await ensurePokotaOwned();
+        }
+        
+        // UI 업데이트
+        if (typeof updateCharacterGachaPullButton === 'function') {
+            updateCharacterGachaPullButton();
+        }
+        if (typeof updateCharacterCollectionAndOwnedCounts === 'function') {
+            updateCharacterCollectionAndOwnedCounts();
+        }
+        if (typeof updateCharacterCollectionMain === 'function') {
+            updateCharacterCollectionMain();
+        }
+        
+        // 가차 버튼 이벤트 리스너 설정
+        setupCharacterGachaButton();
+        
+    } catch (error) {
+        console.error('캐릭터 게임 데이터 로드 실패:', error);
     }
 }
+
+// 메인 페이지용 캐릭터 포인트 업데이트
+function updateCharacterPoints() {
+    if (typeof updateCharacterGachaPullButton === 'function') {
+        updateCharacterGachaPullButton();
+    }
+}
+
+// 메인 페이지용 가차 버튼 업데이트는 game.js에서 처리
 
 // 메인 페이지용 컬렉션 통계 업데이트
 function updateCharacterCollectionAndOwnedCounts() {
@@ -2751,14 +3025,26 @@ function selectCharacterFromCollectionMain(characterType, isOwned) {
 
 // 메인 페이지용 가차 실행
 async function performCharacterGachaPull() {
+    console.log('🎯 캐릭터 뽑기 시작 - 현재 포인트:', userPoints);
+    
     if (userPoints < 150) {
         showToast('포인트가 부족해요! 더 많은 활동을 해보세요! 💪');
         return;
     }
     
-    // 포인트 차감
+    // 포인트 차감 전 상태 로깅
+    console.log('💰 포인트 차감 전:', userPoints);
     userPoints -= 150;
-    await saveUserData(); // 메인 페이지의 사용자 데이터 저장
+    console.log('💰 포인트 차감 후:', userPoints);
+    
+    // 사용자 데이터 저장
+    console.log('💾 사용자 데이터 저장 시작...');
+    await saveUserData();
+    console.log('💾 사용자 데이터 저장 완료');
+    
+    // UI 업데이트 (포인트 표시)
+    updateUI();
+    console.log('🔄 UI 업데이트 완료');
     
     // game.js의 performGachaPull 함수를 사용하되, 포인트는 메인 페이지에서 관리
     if (typeof performGachaPull === 'function') {
@@ -2767,14 +3053,33 @@ async function performCharacterGachaPull() {
             appState.timer.points = userPoints;
         }
         
-        await performGachaPull();
+        const gachaResult = await performGachaPull();
+        
+        if (gachaResult === null) {
+            // 모든 캐릭터를 보유한 경우 포인트 복구
+            console.log('💰 모든 캐릭터 보유로 인한 포인트 복구');
+            userPoints += 150;
+            await saveUserData();
+        }
+        
+        console.log('🎲 가차 실행 완료');
         
         // UI 업데이트
+        console.log('🔄 최종 UI 업데이트 시작');
         updateUI();
-        updateCharacterPoints();
-        updateCharacterGachaPullButton();
-        updateCharacterCollectionAndOwnedCounts();
-        updateCharacterCollectionMain();
+        if (typeof updateCharacterPoints === 'function') {
+            updateCharacterPoints();
+        }
+        if (typeof updateCharacterGachaPullButton === 'function') {
+            updateCharacterGachaPullButton();
+        }
+        if (typeof updateCharacterCollectionAndOwnedCounts === 'function') {
+            updateCharacterCollectionAndOwnedCounts();
+        }
+        if (typeof updateCharacterCollectionMain === 'function') {
+            updateCharacterCollectionMain();
+        }
+        console.log('🔄 최종 UI 업데이트 완료');
     }
 }
 
@@ -2875,18 +3180,18 @@ function selectHabitForFocus(habit) {
         }
     } else {
         // 일치하는 시간 칩이 없으면 직접입력 사용
-        const customTimeBtn = document.getElementById('customTimeBtn');
+        const customTimeChip = document.querySelector('.time-chip[data-time="custom"]');
         const customTimeInput = document.getElementById('customTimeInput');
-        const customMinutes = document.getElementById('customMinutes');
+        const customTimeValue = document.getElementById('customTimeValue');
         
-        if (customTimeBtn) {
-            customTimeBtn.classList.add('active');
+        if (customTimeChip) {
+            customTimeChip.classList.add('active');
         }
         if (customTimeInput) {
             customTimeInput.style.display = 'block';
         }
-        if (customMinutes) {
-            customMinutes.value = habit.defaultTime;
+        if (customTimeValue) {
+            customTimeValue.value = habit.defaultTime;
         }
     }
     

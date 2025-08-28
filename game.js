@@ -215,28 +215,92 @@ let appState = {
 // 게임 데이터 로드
 async function loadGameData() {
     try {
+        console.log('🎮 게임 데이터 로드 시작');
+        let loadedFromIndexedDB = false;
+        
         if (window.DailytDB && typeof window.DailytDB.getAllGameData === 'function') {
-            const gameData = await window.DailytDB.getAllGameData();
+            try {
+                const gameData = await window.DailytDB.getAllGameData();
+                
+                if (gameData && Object.keys(gameData).length > 0) {
+                    // 캐릭터 데이터 로드
+                    appState.gacha.characters = gameData.userCharacters || [];
+                    appState.gacha.selectedCharacter = gameData.selectedCharacter || null;
+                    appState.gacha.selectedCostumes = gameData.selectedCostumes || {};
+                    appState.gacha.ownedCostumes = gameData.ownedCostumes || {};
+                    loadedFromIndexedDB = true;
+                    
+                    console.log('✅ IndexedDB에서 게임 데이터 로드 완료:', {
+                        characters: appState.gacha.characters.length,
+                        selectedCharacter: appState.gacha.selectedCharacter,
+                        costumes: Object.keys(appState.gacha.ownedCostumes).length
+                    });
+                }
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 로드 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB에서 로드 실패하거나 데이터가 없으면 localStorage에서 로드
+        if (!loadedFromIndexedDB) {
+            console.log('📦 localStorage에서 게임 데이터 로드 시도');
             
-            // 캐릭터 데이터 로드
-            appState.gacha.characters = gameData.userCharacters || [];
-            appState.gacha.selectedCharacter = gameData.selectedCharacter || null;
-            appState.gacha.selectedCostumes = gameData.selectedCostumes || {};
-            appState.gacha.ownedCostumes = gameData.ownedCostumes || {};
-            
-            console.log('🎮 게임 데이터 로드 완료');
-        } else {
-            console.warn('⚠️ DailytDB를 사용할 수 없어 localStorage에서 로드');
-            
-            // localStorage 폴백
-            appState.gacha.characters = JSON.parse(localStorage.getItem('userCharacters') || '[]');
-            appState.gacha.selectedCharacter = localStorage.getItem('selectedCharacter');
-            appState.gacha.selectedCostumes = JSON.parse(localStorage.getItem('selectedCostumes') || '{}');
-            appState.gacha.ownedCostumes = JSON.parse(localStorage.getItem('ownedCostumes') || '{}');
+            // 먼저 백업 데이터 확인
+            const backupData = localStorage.getItem('gameDataBackup');
+            if (backupData) {
+                try {
+                    const backup = JSON.parse(backupData);
+                    appState.gacha.characters = backup.characters || [];
+                    appState.gacha.selectedCharacter = backup.selectedCharacter || null;
+                    appState.gacha.selectedCostumes = backup.selectedCostumes || {};
+                    appState.gacha.ownedCostumes = backup.ownedCostumes || {};
+                    console.log('✅ 백업 데이터에서 로드 완료');
+                } catch (backupError) {
+                    console.warn('⚠️ 백업 데이터 파싱 실패:', backupError);
+                    // 개별 localStorage 아이템에서 로드
+                    loadFromIndividualLocalStorage();
+                }
+            } else {
+                // 개별 localStorage 아이템에서 로드
+                loadFromIndividualLocalStorage();
+            }
         }
     } catch (error) {
-        console.error('게임 데이터 로드 실패:', error);
-        // 기본값으로 초기화
+        console.error('❌ 게임 데이터 로드 완전 실패:', error);
+        
+        // 비상 데이터 확인
+        try {
+            const emergencyData = localStorage.getItem('emergencyGameData');
+            if (emergencyData) {
+                const emergency = JSON.parse(emergencyData);
+                appState.gacha.characters = emergency.characters || [];
+                appState.gacha.selectedCharacter = emergency.selectedCharacter || null;
+                console.log('🚨 비상 데이터에서 복구 완료');
+            }
+        } catch (emergencyError) {
+            console.error('❌ 비상 데이터 복구도 실패:', emergencyError);
+        }
+        
+        // 모든 복구 실패 시 기본값으로 초기화
+        if (!appState.gacha.characters) {
+            appState.gacha.characters = [];
+            appState.gacha.selectedCharacter = null;
+            appState.gacha.selectedCostumes = {};
+            appState.gacha.ownedCostumes = {};
+            console.log('🔄 기본값으로 초기화');
+        }
+    }
+}
+
+function loadFromIndividualLocalStorage() {
+    try {
+        appState.gacha.characters = JSON.parse(localStorage.getItem('userCharacters') || '[]');
+        appState.gacha.selectedCharacter = localStorage.getItem('selectedCharacter');
+        appState.gacha.selectedCostumes = JSON.parse(localStorage.getItem('selectedCostumes') || '{}');
+        appState.gacha.ownedCostumes = JSON.parse(localStorage.getItem('ownedCostumes') || '{}');
+        console.log('✅ 개별 localStorage에서 로드 완료');
+    } catch (error) {
+        console.error('❌ localStorage 개별 로드 실패:', error);
         appState.gacha.characters = [];
         appState.gacha.selectedCharacter = null;
         appState.gacha.selectedCostumes = {};
@@ -247,23 +311,62 @@ async function loadGameData() {
 // 게임 데이터 저장
 async function saveGameData() {
     try {
+        console.log('🎮 게임 데이터 저장 시작:', {
+            characters: appState.gacha.characters.length,
+            selectedCharacter: appState.gacha.selectedCharacter,
+            costumes: Object.keys(appState.gacha.ownedCostumes).length
+        });
+
+        let savedToIndexedDB = false;
+        
         if (window.DailytDB && typeof window.DailytDB.setGameData === 'function') {
-            // IndexedDB에 저장
-            await Promise.all([
-                window.DailytDB.setGameData('userCharacters', appState.gacha.characters),
-                window.DailytDB.setGameData('selectedCharacter', appState.gacha.selectedCharacter),
-                window.DailytDB.setGameData('selectedCostumes', appState.gacha.selectedCostumes),
-                window.DailytDB.setGameData('ownedCostumes', appState.gacha.ownedCostumes)
-            ]);
-        } else {
-            // localStorage 폴백
+            try {
+                // IndexedDB에 저장
+                await Promise.all([
+                    window.DailytDB.setGameData('userCharacters', appState.gacha.characters),
+                    window.DailytDB.setGameData('selectedCharacter', appState.gacha.selectedCharacter),
+                    window.DailytDB.setGameData('selectedCostumes', appState.gacha.selectedCostumes),
+                    window.DailytDB.setGameData('ownedCostumes', appState.gacha.ownedCostumes)
+                ]);
+                savedToIndexedDB = true;
+                console.log('✅ IndexedDB에 게임 데이터 저장 완료');
+            } catch (dbError) {
+                console.warn('⚠️ IndexedDB 저장 실패, localStorage로 폴백:', dbError);
+            }
+        }
+        
+        // IndexedDB 저장 실패 시 또는 DailytDB가 없을 때 localStorage 사용
+        if (!savedToIndexedDB) {
             localStorage.setItem('userCharacters', JSON.stringify(appState.gacha.characters));
-            localStorage.setItem('selectedCharacter', appState.gacha.selectedCharacter);
+            localStorage.setItem('selectedCharacter', appState.gacha.selectedCharacter || '');
             localStorage.setItem('selectedCostumes', JSON.stringify(appState.gacha.selectedCostumes));
             localStorage.setItem('ownedCostumes', JSON.stringify(appState.gacha.ownedCostumes));
+            console.log('✅ localStorage에 게임 데이터 저장 완료');
         }
+        
+        // 항상 localStorage에도 백업으로 저장
+        const backupData = {
+            characters: appState.gacha.characters,
+            selectedCharacter: appState.gacha.selectedCharacter,
+            selectedCostumes: appState.gacha.selectedCostumes,
+            ownedCostumes: appState.gacha.ownedCostumes,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('gameDataBackup', JSON.stringify(backupData));
+        
     } catch (error) {
-        console.error('게임 데이터 저장 실패:', error);
+        console.error('❌ 게임 데이터 저장 완전 실패:', error);
+        
+        // 마지막 수단으로 간단한 형태로 저장
+        try {
+            localStorage.setItem('emergencyGameData', JSON.stringify({
+                characters: appState.gacha.characters,
+                selectedCharacter: appState.gacha.selectedCharacter,
+                timestamp: Date.now()
+            }));
+        } catch (emergencyError) {
+            console.error('❌ 비상 데이터 저장도 실패:', emergencyError);
+        }
     }
 }
 
@@ -271,8 +374,8 @@ async function saveGameData() {
 // 캐릭터 초기화
 // ========================================
 
-// 캐릭터 DB 초기화 및 포코타 기본 설정
-async function initializeCharacterDB() {
+// 캐릭터 DB 완전 재설정 (개발자 도구용)
+async function resetCharacterDB() {
     try {
         if (window.DailytDB) {
             // 게임 데이터 초기화
@@ -302,14 +405,18 @@ async function initializeCharacterDB() {
 
 // 포코타 기본 보유 설정
 async function ensurePokotaOwned() {
+    console.log('🔍 포코타 보유 확인 시작 - 현재 캐릭터 수:', appState.gacha.characters.length);
+    
     // 포코타를 보유하지 않았다면 기본으로 추가
     const hasPokota = appState.gacha.characters.some(char => char.type === 'pokota');
+    console.log('🎯 포코타 보유 여부:', hasPokota);
     
     if (!hasPokota) {
         // 포코타 기본 캐릭터 추가
         const pokotaCharacter = {
             id: Date.now().toString(),
             type: 'pokota',
+            name: characterDatabase.pokota.name,
             rarity: 'common',
             acquiredAt: Date.now(),
             costume: 'default'
@@ -346,11 +453,22 @@ async function ensurePokotaOwned() {
 
 // 가차 실행
 async function performGachaPull() {
+    console.log('🎲 가차 실행 시작');
+    
     // 랜덤 캐릭터 뽑기
     const result = drawRandomCharacter();
     
+    if (!result) {
+        console.log('🎉 모든 캐릭터를 보유하여 더 이상 뽑을 수 없습니다');
+        showToast('🎉 모든 캐릭터를 수집 완료했습니다!');
+        return null;
+    }
+    
+    console.log('🎯 뽑힌 캐릭터:', result.character.name, '레어도:', result.character.rarity);
+    
     // 캐릭터 추가
     appState.gacha.characters.push(result.character);
+    console.log('📊 현재 보유 캐릭터 수:', appState.gacha.characters.length);
     
     // 코스튬 추가 (기본 코스튬)
     if (!appState.gacha.ownedCostumes[result.character.type]) {
@@ -370,12 +488,15 @@ async function performGachaPull() {
             if (!appState.gacha.ownedCostumes[result.character.type].includes(bonusCostume)) {
                 appState.gacha.ownedCostumes[result.character.type].push(bonusCostume);
                 result.bonusCostume = characterData.costumes[bonusCostume];
+                console.log('🎁 보너스 코스튬 획득:', bonusCostume);
             }
         }
     }
     
     // 게임 데이터 저장
+    console.log('💾 게임 데이터 저장 시작...');
     await saveGameData();
+    console.log('💾 게임 데이터 저장 완료');
     
     // UI 업데이트
     updateCharacterCollectionAndOwnedCounts();
@@ -393,6 +514,22 @@ async function performGachaPull() {
 
 // 랜덤 캐릭터 뽑기 로직
 function drawRandomCharacter() {
+    // 이미 보유한 캐릭터 타입 목록
+    const ownedCharacterTypes = appState.gacha.characters.map(char => char.type);
+    console.log('🎯 현재 보유 캐릭터 타입:', ownedCharacterTypes);
+    
+    // 보유하지 않은 캐릭터들만 필터링
+    const unownedCharacters = Object.values(characterDatabase).filter(char => 
+        !ownedCharacterTypes.includes(char.id)
+    );
+    
+    console.log('🆕 뽑을 수 있는 캐릭터 수:', unownedCharacters.length);
+    
+    if (unownedCharacters.length === 0) {
+        console.log('🎉 모든 캐릭터를 보유하고 있습니다!');
+        return null; // 더 이상 뽑을 캐릭터가 없음
+    }
+    
     const random = Math.random();
     let selectedRarity = 'common';
     
@@ -402,8 +539,14 @@ function drawRandomCharacter() {
         selectedRarity = 'rare';
     }
     
-    // 해당 희귀도의 캐릭터들 필터링
-    const charactersOfRarity = Object.values(characterDatabase).filter(char => char.rarity === selectedRarity);
+    // 해당 희귀도의 미보유 캐릭터들 필터링
+    let charactersOfRarity = unownedCharacters.filter(char => char.rarity === selectedRarity);
+    
+    // 해당 희귀도에 미보유 캐릭터가 없으면 다른 희귀도에서 선택
+    if (charactersOfRarity.length === 0) {
+        console.log(`⚠️ ${selectedRarity} 등급에 미보유 캐릭터가 없어 전체 미보유 캐릭터에서 선택`);
+        charactersOfRarity = unownedCharacters;
+    }
     
     // 랜덤 선택
     const randomCharacter = charactersOfRarity[Math.floor(Math.random() * charactersOfRarity.length)];
@@ -412,6 +555,7 @@ function drawRandomCharacter() {
     const character = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
         type: randomCharacter.id,
+        name: randomCharacter.name,
         rarity: randomCharacter.rarity,
         acquiredAt: Date.now(),
         costume: 'default'
@@ -569,6 +713,13 @@ function updateCharacterCollectionMain() {
     }).join('');
 }
 
+// 모든 캐릭터를 보유했는지 확인
+function isAllCharactersOwned() {
+    const totalCharacters = Object.keys(characterDatabase).length;
+    const ownedCharacters = appState.gacha.characters.length;
+    return ownedCharacters >= totalCharacters;
+}
+
 // 메인 페이지 가차 버튼 업데이트
 function updateCharacterGachaPullButton() {
     const gachaPullBtn = document.getElementById('characterGachaPull');
@@ -578,15 +729,30 @@ function updateCharacterGachaPullButton() {
     const points = typeof userPoints !== 'undefined' ? userPoints : 0;
     
     if (gachaBtnText && gachaPullBtn) {
-        // 항상 "캐릭터 뽑기"로 고정
-        gachaBtnText.textContent = '캐릭터 뽑기';
+        const allCharactersOwned = isAllCharactersOwned();
         
-        if (points >= 150) {
+        if (allCharactersOwned) {
+            // 모든 캐릭터를 보유한 경우
+            gachaBtnText.textContent = '다음에 만나요';
+            gachaPullBtn.classList.remove('active');
+            gachaPullBtn.disabled = true;
+            gachaPullBtn.style.opacity = '0.5';
+            gachaPullBtn.style.cursor = 'not-allowed';
+            console.log('🎉 모든 캐릭터 보유 완료 - 버튼 비활성화');
+        } else if (points >= 150) {
+            // 포인트가 충분한 경우
+            gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.add('active');
             gachaPullBtn.disabled = false;
+            gachaPullBtn.style.opacity = '1';
+            gachaPullBtn.style.cursor = 'pointer';
         } else {
+            // 포인트가 부족한 경우
+            gachaBtnText.textContent = '캐릭터 뽑기';
             gachaPullBtn.classList.remove('active');
-            gachaPullBtn.disabled = false; // disabled를 false로 변경하여 클릭 가능하게 함
+            gachaPullBtn.disabled = false; // 클릭 가능하게 하여 부족 메시지 표시
+            gachaPullBtn.style.opacity = '1';
+            gachaPullBtn.style.cursor = 'pointer';
         }
     }
 }
@@ -811,18 +977,14 @@ function createExplosion(container, x, y, color) {
 // script.js에서 호출하는 함수들
 async function loadCharacterGameData() {
     await loadGameData();
-    await initializeCharacterDB(); // DB 초기화
-    await ensurePokotaOwned();
+    await ensurePokotaOwned(); // 포코타 보유 확인만 실행 (초기화 제거)
 }
 
 function updateCharacterPoints() {
     updateCharacterGachaPullButton();
 }
 
-// 메인 페이지용 가차 실행 (script.js에서 호출)
-async function performCharacterGachaPull() {
-    return await performGachaPull();
-}
+// 메인 페이지용 가차 실행은 script.js에서 처리 (중복 제거됨)
 
 // ========================================
 // 전역 함수들

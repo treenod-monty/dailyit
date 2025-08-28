@@ -71,7 +71,6 @@
                                 <div class="form-section">
                                     <label class="setup-label">시간 선택</label>
                                     <div class="time-chips">
-                                        <button class="time-chip" data-time="0.0167">1초</button>
                                         <button class="time-chip" data-time="10">10분</button>
                                         <button class="time-chip" data-time="30">30분</button>
                                         <button class="time-chip active" data-time="60">1시간</button>
@@ -79,7 +78,14 @@
                                     </div>
                                     
                                     <div id="customTimeInput" class="custom-time-input" style="display: none;">
-                                        <input type="number" id="customMinutes" placeholder="분 입력" min="1" max="300" class="custom-input">
+                                        <div class="time-unit-toggle">
+                                            <button type="button" class="unit-btn active" data-unit="minutes">분</button>
+                                            <button type="button" class="unit-btn" data-unit="seconds">초</button>
+                                        </div>
+                                        <div class="time-value-input">
+                                            <input type="number" id="customTimeValue" placeholder="시간" min="1" max="3600">
+                                            <span id="customTimeUnit">분</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
