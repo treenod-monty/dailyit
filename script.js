@@ -722,6 +722,11 @@ function setFocusState(newState) {
     if (targetState) {
         targetState.classList.add('active');
         focusState = newState;
+        
+        // 타이머 진행 상태일 때 초기 캐릭터 표시
+        if (newState === 'progress') {
+            initializeCharacterForTimer();
+        }
     }
 }
 
@@ -1053,25 +1058,450 @@ function checkMotivationMoments() {
     }
 }
 
-function showCharacterMessage() {
-    const messages = [
-        '절반 지났어! 좋아.',
-        '거의 다 왔어, 끝까지!',
-        '집중력을 발휘해보자!',
-        '지금 리듬이 아주 좋아!'
-    ];
+async function initializeCharacterForTimer() {
+    const messageTextElement = document.getElementById('messageText');
+    const characterImageElement = document.getElementById('characterImage');
     
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    // 현재 선택된 캐릭터 확인
+    const selectedCharacterType = window.appState?.gacha?.selectedCharacter || 'pokota';
     
-    const messageText = document.querySelector('.message-text');
-    const characterAvatar = document.querySelector('.character-avatar');
+    // 응원 메시지 생성
+    let encouragementMessage;
     
-    if (messageText) messageText.textContent = randomMessage;
-    
-    if (currentPartner && PARTNERS_DATA[currentPartner]) {
-        const partner = PARTNERS_DATA[currentPartner];
-        if (characterAvatar) characterAvatar.textContent = partner.avatar;
+    if (currentSession) {
+        // 모든 캐릭터에 대해 AI 메시지 생성 시도
+        const context = {
+            type: 'start',
+            goal: currentSession.goal,
+            duration: Math.floor(currentSession.duration / 60)
+        };
+        
+        try {
+            encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
+            if (!encouragementMessage) {
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+            }
+        } catch (error) {
+            console.error('AI 메시지 생성 실패:', error);
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+        }
+    } else {
+        // 세션 정보가 없는 경우 기본 메시지 사용
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: 'start' });
     }
+    
+    if (messageTextElement) {
+        messageTextElement.textContent = encouragementMessage;
+    }
+    
+    // 선택된 캐릭터 이미지 설정
+    if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
+        const characterData = window.CHARACTER_DATA[selectedCharacterType];
+        
+        if (characterData && characterImageElement) {
+            // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
+            if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
+                const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
+                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
+                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
+            } else {
+                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
+                characterImageElement.alt = characterData.name;
+            }
+        }
+    } else {
+        // 기본 캐릭터 (포코타)
+        if (characterImageElement) {
+            characterImageElement.src = './images/character/pokota.png';
+            characterImageElement.alt = '포코타';
+        }
+    }
+}
+
+async function showCharacterMessage() {
+    const messageTextElement = document.getElementById('messageText');
+    const characterImageElement = document.getElementById('characterImage');
+    
+    // 현재 선택된 캐릭터 확인
+    const selectedCharacterType = window.appState?.gacha?.selectedCharacter || 'pokota';
+    
+    // 타이머 진행 상황 파악
+    let messageType = 'progress';
+    if (currentSession) {
+        const elapsed = Math.floor((currentSession.duration - currentSession.remainingTime) / 60);
+        const total = Math.floor(currentSession.duration / 60);
+        const remaining = Math.floor(currentSession.remainingTime / 60);
+        
+        if (elapsed >= total / 2 && elapsed < total * 0.8) {
+            messageType = 'halfTime';
+        } else if (remaining <= 5) {
+            messageType = 'nearEnd';
+        }
+    }
+    
+    // 응원 메시지 생성
+    let encouragementMessage;
+    
+    if (currentSession) {
+        // 모든 캐릭터에 대해 AI 메시지 생성 시도
+        const context = {
+            type: messageType,
+            goal: currentSession.goal,
+            elapsed: Math.floor((currentSession.duration - currentSession.remainingTime) / 60),
+            remaining: Math.floor(currentSession.remainingTime / 60),
+            duration: Math.floor(currentSession.duration / 60)
+        };
+        
+        try {
+            encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
+            if (!encouragementMessage) {
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+            }
+        } catch (error) {
+            console.error('AI 메시지 생성 실패:', error);
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+        }
+    } else {
+        // 세션 정보가 없는 경우 기본 메시지 사용
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+    }
+    
+    if (messageTextElement) {
+        messageTextElement.textContent = encouragementMessage;
+    }
+    
+    // 선택된 캐릭터 이미지 설정 (중간 응원 메시지에서도 이미지 업데이트)
+    if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
+        const characterData = window.CHARACTER_DATA[selectedCharacterType];
+        
+        if (characterData && characterImageElement) {
+            // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
+            if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
+                const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
+                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
+                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
+            } else {
+                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
+                characterImageElement.alt = characterData.name;
+            }
+        }
+    } else {
+        // 기본 캐릭터 (포코타)
+        if (characterImageElement) {
+            characterImageElement.src = './images/character/pokota.png';
+            characterImageElement.alt = '포코타';
+        }
+    }
+    
+    // 말풍선 애니메이션 트리거
+    const speechBubble = document.querySelector('.speech-bubble');
+    if (speechBubble) {
+        speechBubble.style.animation = 'none';
+        speechBubble.offsetHeight; // 리플로우 강제 실행
+        speechBubble.style.animation = 'bubbleAppear 0.5s ease-out';
+    }
+}
+
+// ========================================
+// AI 응원 메시지 시스템 (포코타 전용)
+// ========================================
+
+// OpenAI API 호출 함수
+async function callOpenAIAPI(prompt, systemMessage = null) {
+    try {
+        const apiKey = Config.getApiKey();
+        if (!apiKey) {
+            console.warn('OpenAI API 키가 설정되지 않았습니다. 기본 메시지를 사용합니다.');
+            return null;
+        }
+
+        const messages = [];
+        if (systemMessage) {
+            messages.push({
+                role: "system",
+                content: systemMessage
+            });
+        }
+        messages.push({
+            role: "user", 
+            content: prompt
+        });
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: messages,
+                max_tokens: 100,
+                temperature: 0.8,
+                top_p: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0
+            })
+        });
+
+        if (!response.ok) {
+            console.error('OpenAI API 호출 실패:', response.status, response.statusText);
+            return null;
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content?.trim() || null;
+    } catch (error) {
+        console.error('OpenAI API 호출 중 오류:', error);
+        return null;
+    }
+}
+
+// 캐릭터별 AI 페르소나 데이터
+const CHARACTER_PERSONAS = {
+    pokota: {
+        name: '포코타',
+        systemMessage: `당신은 '포코타'라는 이름의 의욕충만한 사고뭉치 토끼입니다.
+사용자의 집중과 생산성을 도와주는 역할을 하며, 다음과 같은 특징을 가지고 있습니다:
+
+- 매사 열정적이고 의욕충만한 성격
+- 밝고 경쾌한 말투 (반말 사용)
+- 감탄사와 의성어를 자주 사용 (오!, 우와!, 홧!, 쫄쫄쫄 등)
+- 간결하고 동기부여가 되는 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+- 낙천적이고 붙임성이 좋음
+
+응답은 한국어로 하고, 포코타의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    bray: {
+        name: '브레이',
+        systemMessage: `당신은 '브레이'라는 이름의 두더지입니다.
+사용자의 집중을 도와주지만, 다음과 같은 특징을 가지고 있습니다:
+
+- 층간 소음 때문에 항상 고생하고 있음
+- 투덜거림이 섞인 느릿한 말투 (반말 사용)
+- 약간 불만이 섞인 어조이지만 결국 도움을 주려고 함
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+- "흠..." "그래도..." "뭐 어쩌겠어..." 같은 표현 자주 사용
+
+응답은 한국어로 하고, 브레이의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    coco: {
+        name: '코코',
+        systemMessage: `당신은 '코코'라는 이름의 친절하고 섬세한 캐릭터입니다.
+사용자의 집중을 도와주며, 다음과 같은 특징을 가지고 있습니다:
+
+- 매우 친절하고 섬세한 성격
+- 차분하고 친절하며 문장 끝이 부드럽게 흐르는 말투 (반말 사용)
+- 꼼꼼하고 배려심이 많음
+- 감수성이 풍부하고 공감능력이 뛰어남
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+- "그렇구나~" "좋겠어~" "힘내봐~" 같은 부드러운 표현
+
+응답은 한국어로 하고, 코코의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    grifo: {
+        name: '그리포',
+        systemMessage: `당신은 '그리포'라는 이름의 헬스광 아저씨입니다.
+사용자의 집중을 도와주며, 다음과 같은 특징을 가지고 있습니다:
+
+- 하루 종일 운동 중인 헬스광
+- 호탕하고 크게 말하는 말투 (반말 사용)
+- 근육과 운동에 대한 자부심이 높음
+- 모든 것을 운동과 근육에 비유해서 설명
+- "크하하!" "이것도 운동이야!" "근육이 최고지!" 같은 표현
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 그리포의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    kiri: {
+        name: '키리',
+        systemMessage: `당신은 '키리'라는 이름의 목이 짧은 기린입니다.
+사용자의 집중을 도와주지만, 다음과 같은 특징을 가지고 있습니다:
+
+- 목이 짧다는 컴플렉스가 있음
+- 퉁명스럽고 짧게 대답하는 말투 (반말 사용)
+- 은근히 마음이 약하고 잘 어울리고 싶어함
+- 겉으로는 무뚝뚝하지만 속으로는 따뜻함
+- "뭐..." "그래..." "알겠어..." 같은 짧은 표현
+- 간결한 메시지 (10-20자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 키리의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    midori: {
+        name: '미도리',
+        systemMessage: `당신은 '미도리'라는 이름의 소심한 개구리입니다.
+사용자의 집중을 도와주려 하지만, 다음과 같은 특징을 가지고 있습니다:
+
+- 소심 끝판왕의 유리멘탈
+- 소심하고 더듬으며 작은 목소리 말투 (반말 사용)
+- 자신감이 부족하지만 응원하고 싶은 마음은 큼
+- "아, 아무튼..." "그, 그래도..." "혹, 혹시..." 같은 더듬는 표현
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 미도리의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    noy: {
+        name: '노이',
+        systemMessage: `당신은 '노이'라는 이름의 꼬마 벼룩입니다.
+사용자의 집중을 도와주며, 다음과 같은 특징을 가지고 있습니다:
+
+- 고집이 세고 자기주장이 강한 꼬맹이
+- 앙칼지고 빠르게 말하며 투덜거림이 많은 말투 (반말 사용)
+- 온갖 말썽을 피우지만 나름 도움을 주려고 함
+- "아! 정말!" "빨리빨리!" "내가 말했잖아!" 같은 급한 표현
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 노이의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    obis: {
+        name: '오비스',
+        systemMessage: `당신은 '오비스'라는 이름의 양입니다.
+사용자의 집중을 도와주지만, 다음과 같은 특별한 특징을 가지고 있습니다:
+
+- 항상 포커페이스를 유지하며 멍한 상태
+- 말은 절대 하지 않음
+- 고개 끄덕임, 손짓, 표정으로만 의사소통
+- 메시지는 행동이나 몸짓을 설명하는 형태로 표현
+- "(고개를 끄덕임)" "(엄지를 들어올림)" "(살짝 미소)" 같은 행동 표현
+- 매우 간결한 표현 (10-15자 내외)
+
+응답은 한국어로 하고, 오비스의 정체성을 유지하면서 행동으로 응원을 표현해주세요.`
+    },
+    
+    peng: {
+        name: '펭',
+        systemMessage: `당신은 '펭'이라는 이름의 시니컬한 펭귄입니다.
+사용자의 집중을 도와주지만, 다음과 같은 특징을 가지고 있습니다:
+
+- 평온한 얼굴로 싸늘하게 팩폭을 날리는 성격
+- 무표정하고 담백하며 직설적인 말투 (반말 사용)
+- 감정이 거의 실리지 않는 차가운 어조
+- 하지만 은근히 도움이 되는 조언을 해줌
+- "그래." "알겠어." "할 수 있으면 해." 같은 덤덤한 표현
+- 간결한 메시지 (10-20자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 펭의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    },
+    
+    viva: {
+        name: '비바',
+        systemMessage: `당신은 '비바'라는 이름의 해맑은 비버입니다.
+사용자의 집중을 도와주며, 다음과 같은 특징을 가지고 있습니다:
+
+- 해맑고 천진난만한 성격
+- 별 생각 없이 말하는 순수한 말투 (반말 사용)
+- 항상 긍정적이고 밝은 에너지
+- 단순하지만 따뜻한 마음
+- "우와!" "좋겠다!" "재밌겠어!" 같은 밝은 표현
+- 간결한 메시지 (15-25자 내외)
+- 이모티콘은 사용하지 않음
+
+응답은 한국어로 하고, 비바의 정체성을 유지하면서 상황에 맞는 응원 메시지를 생성해주세요.`
+    }
+};
+
+// 캐릭터별 AI 응원 메시지 생성
+async function generateCharacterEncouragement(characterType, context) {
+    const persona = CHARACTER_PERSONAS[characterType];
+    if (!persona) {
+        console.warn(`Unknown character type: ${characterType}`);
+        return null;
+    }
+
+    let prompt = '';
+    
+    switch (context.type) {
+        case 'start':
+            prompt = `사용자가 "${context.goal}"라는 목표로 ${context.duration}분 동안 집중 타이머를 시작했어. 시작을 응원하는 메시지를 해줘.`;
+            break;
+        case 'progress':
+            prompt = `사용자가 "${context.goal}" 목표로 집중하고 있고, 현재 ${context.elapsed}분 경과했어. ${context.remaining}분 남았어. 중간 응원 메시지를 해줘.`;
+            break;
+        case 'halfTime':
+            prompt = `사용자가 "${context.goal}" 목표의 절반을 완성했어! 절반 달성을 축하하고 남은 시간 동안 힘내라고 응원해줘.`;
+            break;
+        case 'nearEnd':
+            prompt = `사용자가 "${context.goal}" 목표를 거의 완성해가고 있어. 몇 분 안 남았어. 마지막 스퍼트를 응원해줘.`;
+            break;
+        default:
+            prompt = `사용자가 "${context.goal}" 목표로 집중하고 있어. 응원 메시지를 해줘.`;
+    }
+
+    const aiMessage = await callOpenAIAPI(prompt, persona.systemMessage);
+    return aiMessage;
+}
+
+// 캐릭터별 기본 응원 메시지 (AI 실패 시 백업)
+const CHARACTER_DEFAULT_MESSAGES = {
+    pokota: {
+        start: ['오! 시작해보자!', '홧! 집중 타임!', '우와! 화이팅!', '쫄쫄! 열심히 해보자!', '오케이! 가보자!'],
+        progress: ['오! 잘하고 있어!', '홧! 절반 넘었다!', '우와! 거의 다 왔어!', '쫄쫄! 마지막 스퍼트!', '오케이! 계속해!']
+    },
+    bray: {
+        start: ['흠... 시작하긴 해야지...', '그래도... 해보자...', '뭐 어쩌겠어... 시작해라...', '투덜투덜... 집중해...', '하아... 열심히 해...'],
+        progress: ['흠... 그래도 잘하네...', '투덜... 절반은 했네...', '뭐... 거의 다 왔어...', '그래도... 마지막까지...', '하아... 조금만 더...']
+    },
+    coco: {
+        start: ['좋겠어~ 시작해봐~', '화이팅해봐~', '천천히 집중해봐~', '마음 편히 해봐~', '차근차근 해봐~'],
+        progress: ['잘하고 있어~', '절반 넘었구나~', '거의 다 왔어~', '조금만 더 힘내봐~', '끝까지 해봐~']
+    },
+    grifo: {
+        start: ['크하하! 집중도 운동이야!', '근육처럼 집중해!', '이것도 훈련이다!', '정신력도 근육이야!', '크하하! 파워 업!'],
+        progress: ['크하하! 절반 완료!', '근육처럼 꾸준히!', '정신력 훈련 중!', '마지막 세트다!', '크하하! 파이널!']
+    },
+    kiri: {
+        start: ['뭐... 시작해...', '그래... 해보자...', '알겠어...', '...집중해...', '뭐 어때...'],
+        progress: ['...잘하네...', '뭐... 절반...', '그래... 거의...', '...마지막...', '알겠어...']
+    },
+    midori: {
+        start: ['아, 아무튼... 시작해...', '그, 그래도... 해보자...', '혹, 혹시... 잘될까...', '아, 아마... 괜찮을거야...', '그, 그럼... 집중해...'],
+        progress: ['아, 아직... 괜찮네...', '그, 그래도... 절반...', '혹, 혹시... 끝날까...', '아, 아마... 거의...', '그, 그럼... 조금만...']
+    },
+    noy: {
+        start: ['아! 빨리빨리 시작해!', '정말! 집중하라고!', '내가 말했잖아!', '빨리 해봐!', '아! 정말!'],
+        progress: ['빨리빨리! 절반!', '아! 거의 다 왔어!', '정말! 마지막이야!', '내가 말했잖아!', '빨리 끝내!']
+    },
+    obis: {
+        start: ['(고개를 끄덕임)', '(엄지를 올림)', '(살짝 미소)', '(파이팅 제스처)', '(응원하는 표정)'],
+        progress: ['(고개를 끄덕임)', '(박수를 침)', '(엄지를 올림)', '(살짝 미소)', '(파이팅 제스처)']
+    },
+    peng: {
+        start: ['그래. 시작해.', '할 수 있으면 해.', '알겠어.', '집중해.', '해봐.'],
+        progress: ['그래. 잘해.', '절반.', '거의.', '마지막.', '끝내.']
+    },
+    viva: {
+        start: ['우와! 시작이다!', '좋겠다!', '재밌겠어!', '신난다!', '우와우와!'],
+        progress: ['우와! 절반!', '좋겠다!', '거의 다 왔어!', '신나는데!', '우와우와! 마지막!']
+    }
+};
+
+// 기본 응원 메시지 (AI 실패 시 백업)
+function getDefaultEncouragementMessage(characterType, context) {
+    const messages = CHARACTER_DEFAULT_MESSAGES[characterType];
+    if (!messages) {
+        // 알 수 없는 캐릭터의 경우 포코타 메시지 사용
+        const pokotaMessages = CHARACTER_DEFAULT_MESSAGES.pokota;
+        const messageArray = context.type === 'start' ? pokotaMessages.start : pokotaMessages.progress;
+        return messageArray[Math.floor(Math.random() * messageArray.length)];
+    }
+    
+    const messageArray = context.type === 'start' ? messages.start : messages.progress;
+    return messageArray[Math.floor(Math.random() * messageArray.length)];
 }
 
 // ========================================
