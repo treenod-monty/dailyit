@@ -3274,8 +3274,9 @@ body.modal-open {
     }
     
     .character-collection-grid {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 10px;
+        width: 100%;
     }
     
     .character-image-main {
@@ -3295,22 +3296,43 @@ body.modal-open {
     }
     
     .character-collection-grid {
-        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
         width: 100%;
-        justify-content: center;
-        display: grid;
-        justify-items: center;
+        max-width: 100%;
     }
     
     .character-card-main {
-        padding: 10px;
+        padding: 8px;
         margin: 0 auto;
+        min-height: 85px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .character-image-main-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
     }
     
     .character-image-main {
-        width: 45px;
-        height: 45px;
+        width: 42px;
+        height: 42px;
+    }
+    
+    .character-name-main {
+        font-size: 11px !important;
+        line-height: 1.2;
+        margin-bottom: 2px;
+    }
+    
+    .character-count-main {
+        font-size: 10px !important;
+        line-height: 1.2;
     }
 }
 
