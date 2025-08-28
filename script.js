@@ -984,7 +984,7 @@ function startProgressTimer() {
     }, 1000);
 }
 
-function pauseCircleTimer() {
+async function pauseCircleTimer() {
     if (!currentSession) return;
     
     currentSession.isPaused = !currentSession.isPaused;
@@ -994,10 +994,18 @@ function pauseCircleTimer() {
         pauseBtn.innerHTML = currentSession.isPaused ? '<i data-lucide="play"></i> 재개' : '<i data-lucide="pause"></i> 일시정지';
         if (window.lucide) window.lucide.createIcons();
     }
+    
+    // 일시정지 시 캐릭터 메시지 표시
+    if (currentSession.isPaused) {
+        await showPauseMessage();
+    }
 }
 
-function stopCircleTimer() {
+async function stopCircleTimer() {
     if (!currentSession) return;
+    
+    // 정지 시도 시 캐릭터 메시지 표시 (포기 만류)
+    await showStopAttemptMessage();
     
     showConfirmModal(
         '세션 종료',
@@ -1009,7 +1017,7 @@ function stopCircleTimer() {
     });
 }
 
-function completeCircleSession() {
+async function completeCircleSession() {
     if (!currentSession) return;
     
     // Stop timer
@@ -1017,6 +1025,9 @@ function completeCircleSession() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
+    
+    // 완료 시 캐릭터 축하 메시지 표시
+    await showCompleteMessage();
     
     // Award points
     const earnedPoints = 50; // 기본 완료 포인트
@@ -1045,16 +1056,23 @@ function resetCircleSession() {
     resetFocusState();
 }
 
-function checkMotivationMoments() {
+async function checkMotivationMoments() {
     if (!currentSession) return;
     
     const elapsed = currentSession.duration - currentSession.remainingTime;
-    const halfTime = Math.floor(currentSession.duration / 2);
-    const nearEnd = currentSession.duration - 300; // 5분 전
+    const progress = elapsed / currentSession.duration;
     
-    // Show motivation at half time and 5 minutes before end
-    if (elapsed === halfTime || elapsed === nearEnd) {
-        showCharacterMessage();
+    const halfTime = Math.floor(currentSession.duration / 2);
+    const nearEndTime = Math.floor(currentSession.duration * 0.9); // 90% 지점
+    
+    // 50% 시점 (절반 지점)
+    if (elapsed === halfTime) {
+        await showCharacterMessage();
+    }
+    
+    // 90% 시점 (거의 완료)
+    if (elapsed === nearEndTime) {
+        await showCharacterMessage();
     }
 }
 
@@ -1128,13 +1146,15 @@ async function showCharacterMessage() {
     // 타이머 진행 상황 파악
     let messageType = 'progress';
     if (currentSession) {
-        const elapsed = Math.floor((currentSession.duration - currentSession.remainingTime) / 60);
-        const total = Math.floor(currentSession.duration / 60);
+        const elapsed = (currentSession.duration - currentSession.remainingTime);
+        const total = currentSession.duration;
         const remaining = Math.floor(currentSession.remainingTime / 60);
+        const progress = elapsed / total;
         
-        if (elapsed >= total / 2 && elapsed < total * 0.8) {
+        // 진행 상황에 따른 메시지 타입 결정
+        if (progress >= 0.5 && progress < 0.9) {
             messageType = 'halfTime';
-        } else if (remaining <= 5) {
+        } else if (progress >= 0.9) {
             messageType = 'nearEnd';
         }
     }
@@ -1155,15 +1175,15 @@ async function showCharacterMessage() {
         try {
             encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
             if (!encouragementMessage) {
-                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
             }
         } catch (error) {
             console.error('AI 메시지 생성 실패:', error);
-            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
         }
     } else {
         // 세션 정보가 없는 경우 기본 메시지 사용
-        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: messageType });
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: 'start' });
     }
     
     if (messageTextElement) {
@@ -1194,6 +1214,160 @@ async function showCharacterMessage() {
     }
     
     // 말풍선 애니메이션 트리거
+    const speechBubble = document.querySelector('.speech-bubble');
+    if (speechBubble) {
+        speechBubble.style.animation = 'none';
+        speechBubble.offsetHeight; // 리플로우 강제 실행
+        speechBubble.style.animation = 'bubbleAppear 0.5s ease-out';
+    }
+}
+
+// 일시정지 시 캐릭터 메시지
+async function showPauseMessage() {
+    const messageTextElement = document.getElementById('messageText');
+    const characterImageElement = document.getElementById('characterImage');
+    const selectedCharacterType = window.appState?.gacha?.selectedCharacter || 'pokota';
+    
+    let encouragementMessage;
+    
+    if (currentSession) {
+        const context = {
+            type: 'pause',
+            goal: currentSession.goal,
+            remaining: Math.floor(currentSession.remainingTime / 60),
+            duration: Math.floor(currentSession.duration / 60)
+        };
+        
+        try {
+            encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
+            if (!encouragementMessage) {
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+            }
+        } catch (error) {
+            console.error('AI 메시지 생성 실패:', error);
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+        }
+    } else {
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: 'pause' });
+    }
+    
+    if (messageTextElement) {
+        messageTextElement.textContent = encouragementMessage;
+    }
+    
+    // 캐릭터 이미지 설정
+    updateCharacterImage(characterImageElement, selectedCharacterType);
+    
+    // 말풍선 애니메이션
+    triggerSpeechBubbleAnimation();
+}
+
+// 정지 시도 시 캐릭터 메시지 (포기 만류)
+async function showStopAttemptMessage() {
+    const messageTextElement = document.getElementById('messageText');
+    const characterImageElement = document.getElementById('characterImage');
+    const selectedCharacterType = window.appState?.gacha?.selectedCharacter || 'pokota';
+    
+    let encouragementMessage;
+    
+    if (currentSession) {
+        const context = {
+            type: 'stopAttempt',
+            goal: currentSession.goal,
+            remaining: Math.floor(currentSession.remainingTime / 60),
+            duration: Math.floor(currentSession.duration / 60)
+        };
+        
+        try {
+            encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
+            if (!encouragementMessage) {
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+            }
+        } catch (error) {
+            console.error('AI 메시지 생성 실패:', error);
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+        }
+    } else {
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: 'stopAttempt' });
+    }
+    
+    if (messageTextElement) {
+        messageTextElement.textContent = encouragementMessage;
+    }
+    
+    // 캐릭터 이미지 설정
+    updateCharacterImage(characterImageElement, selectedCharacterType);
+    
+    // 말풍선 애니메이션
+    triggerSpeechBubbleAnimation();
+}
+
+// 완료 시 캐릭터 메시지
+async function showCompleteMessage() {
+    const messageTextElement = document.getElementById('messageText');
+    const characterImageElement = document.getElementById('characterImage');
+    const selectedCharacterType = window.appState?.gacha?.selectedCharacter || 'pokota';
+    
+    let encouragementMessage;
+    
+    if (currentSession) {
+        const context = {
+            type: 'complete',
+            goal: currentSession.goal,
+            duration: Math.floor(currentSession.duration / 60)
+        };
+        
+        try {
+            encouragementMessage = await generateCharacterEncouragement(selectedCharacterType, context);
+            if (!encouragementMessage) {
+                encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+            }
+        } catch (error) {
+            console.error('AI 메시지 생성 실패:', error);
+            encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, context);
+        }
+    } else {
+        encouragementMessage = getDefaultEncouragementMessage(selectedCharacterType, { type: 'complete' });
+    }
+    
+    if (messageTextElement) {
+        messageTextElement.textContent = encouragementMessage;
+    }
+    
+    // 캐릭터 이미지 설정
+    updateCharacterImage(characterImageElement, selectedCharacterType);
+    
+    // 말풍선 애니메이션
+    triggerSpeechBubbleAnimation();
+}
+
+// 캐릭터 이미지 업데이트 헬퍼 함수
+function updateCharacterImage(characterImageElement, selectedCharacterType) {
+    if (window.appState && window.appState.gacha && window.appState.gacha.selectedCharacter) {
+        const characterData = window.CHARACTER_DATA[selectedCharacterType];
+        
+        if (characterData && characterImageElement) {
+            // 선택된 코스튬이 있으면 해당 코스튬 이미지, 없으면 기본 캐릭터 이미지
+            if (window.appState.gacha.selectedCostumes && window.appState.gacha.selectedCostumes[selectedCharacterType]) {
+                const selectedCostume = window.appState.gacha.selectedCostumes[selectedCharacterType];
+                characterImageElement.src = `./images/costumes/${selectedCharacterType}/${selectedCostume}.png`;
+                characterImageElement.alt = `${characterData.name} - ${selectedCostume}`;
+            } else {
+                characterImageElement.src = `./images/character/${selectedCharacterType}.png`;
+                characterImageElement.alt = characterData.name;
+            }
+        }
+    } else {
+        // 기본 캐릭터 (포코타)
+        if (characterImageElement) {
+            characterImageElement.src = './images/character/pokota.png';
+            characterImageElement.alt = '포코타';
+        }
+    }
+}
+
+// 말풍선 애니메이션 트리거 헬퍼 함수
+function triggerSpeechBubbleAnimation() {
     const speechBubble = document.querySelector('.speech-bubble');
     if (speechBubble) {
         speechBubble.style.animation = 'none';
@@ -1427,16 +1601,22 @@ async function generateCharacterEncouragement(characterType, context) {
     
     switch (context.type) {
         case 'start':
-            prompt = `사용자가 "${context.goal}"라는 목표로 ${context.duration}분 동안 집중 타이머를 시작했어. 시작을 응원하는 메시지를 해줘.`;
-            break;
-        case 'progress':
-            prompt = `사용자가 "${context.goal}" 목표로 집중하고 있고, 현재 ${context.elapsed}분 경과했어. ${context.remaining}분 남았어. 중간 응원 메시지를 해줘.`;
+            prompt = `사용자가 "${context.goal}"라는 목표로 ${context.duration}분 동안 집중 타이머를 시작했어. "${context.goal} 시작! 호흡 잡고 천천히 가자" 느낌으로 시작을 응원하는 메시지를 해줘.`;
             break;
         case 'halfTime':
-            prompt = `사용자가 "${context.goal}" 목표의 절반을 완성했어! 절반 달성을 축하하고 남은 시간 동안 힘내라고 응원해줘.`;
+            prompt = `사용자가 "${context.goal}" 목표의 절반을 완성했어! 50% 지점이야. "절반 지났어—페이스 그대로, ${context.remaining}분만 더 가보자" 느낌으로 독려하는 메시지를 해줘.`;
+            break;
+        case 'pause':
+            prompt = `사용자가 "${context.goal}" 타이머를 일시정지했어. "잠깐 쉬었네; 준비되면 이어가자" 느낌으로 재개를 응원하는 메시지를 해줘.`;
+            break;
+        case 'stopAttempt':
+            prompt = `사용자가 "${context.goal}" 타이머를 중도에 정지하려고 해. ${context.remaining}분 남았어. "지금 멈추기 아까워—${context.remaining}분만 더 버텨보자" 느낌으로 포기를 만류하는 메시지를 해줘.`;
             break;
         case 'nearEnd':
-            prompt = `사용자가 "${context.goal}" 목표를 거의 완성해가고 있어. 몇 분 안 남았어. 마지막 스퍼트를 응원해줘.`;
+            prompt = `사용자가 "${context.goal}" 목표를 거의 완성해가고 있어. 90% 지점이야. ${context.remaining}분 남았어. "거의 다 왔어! 라스트 ${context.remaining}분, 집중 유지" 느낌으로 마지막 독려 메시지를 해줘.`;
+            break;
+        case 'complete':
+            prompt = `사용자가 "${context.goal}" 목표를 완전히 완성했어! "완료! ${context.goal} 끝—잘했어 👏" 느낌으로 축하하는 메시지를 해줘.`;
             break;
         default:
             prompt = `사용자가 "${context.goal}" 목표로 집중하고 있어. 응원 메시지를 해줘.`;
@@ -1449,44 +1629,84 @@ async function generateCharacterEncouragement(characterType, context) {
 // 캐릭터별 기본 응원 메시지 (AI 실패 시 백업)
 const CHARACTER_DEFAULT_MESSAGES = {
     pokota: {
-        start: ['오! 시작해보자!', '홧! 집중 타임!', '우와! 화이팅!', '쫄쫄! 열심히 해보자!', '오케이! 가보자!'],
-        progress: ['오! 잘하고 있어!', '홧! 절반 넘었다!', '우와! 거의 다 왔어!', '쫄쫄! 마지막 스퍼트!', '오케이! 계속해!']
+        start: ['오! 시작해보자! 홧홧!', '우와! 화이팅! 쫄쫄 가자!', '오케이! 호흡 잘 잡고!', '홧! 천천히 시작!', '쫄쫄! 집중 타임 시작!'],
+        halfTime: ['오! 절반 넘었어!', '홧! 페이스 그대로!', '우와! 반 왔다!', '쫄쫄! 조금만 더!', '오케이! 계속 가자!'],
+        pause: ['오! 잠깐 쉬었네!', '홧! 준비되면 다시!', '우와! 괜찮아!', '쫄쫄! 숨 고르고!', '오케이! 이어가자!'],
+        stopAttempt: ['오! 아까워!', '홧! 조금만 더!', '우와! 버텨보자!', '쫄쫄! 포기 금지!', '오케이! 끝까지!'],
+        nearEnd: ['오! 거의 다 왔어!', '홧! 라스트 스퍼트!', '우와! 집중 유지!', '쫄쫄! 마지막이야!', '오케이! 파이널!'],
+        complete: ['오! 완료!', '홧! 잘했어!', '우와! 성공!', '쫄쫄! 대단해!', '오케이! 끝!']
     },
     bray: {
-        start: ['흠... 시작하긴 해야지...', '그래도... 해보자...', '뭐 어쩌겠어... 시작해라...', '투덜투덜... 집중해...', '하아... 열심히 해...'],
-        progress: ['흠... 그래도 잘하네...', '투덜... 절반은 했네...', '뭐... 거의 다 왔어...', '그래도... 마지막까지...', '하아... 조금만 더...']
+        start: ['흠... 시작하긴 해야지...', '투덜... 호흡이나 잡고...', '뭐 어쩌겠어... 천천히...', '하아... 시작해라...', '그래도... 해보자...'],
+        halfTime: ['흠... 절반은 했네...', '투덜... 페이스는 괜찮고...', '뭐... 그래도 반...', '하아... 조금만 더...', '그래도... 계속해...'],
+        pause: ['흠... 쉬었구나...', '투덜... 준비되면...', '뭐... 천천히...', '하아... 이어가...', '그래도... 다시 시작...'],
+        stopAttempt: ['흠... 아까워...', '투덜... 여기서 멈춰?', '뭐... 조금만 더...', '하아... 버텨봐...', '그래도... 끝까지...'],
+        nearEnd: ['흠... 거의...', '투덜... 라스트네...', '뭐... 집중해...', '하아... 마지막...', '그래도... 유지해...'],
+        complete: ['흠... 끝났네...', '투덜... 잘했어...', '뭐... 완료...', '하아... 수고했어...', '그래도... 성공...']
     },
     coco: {
-        start: ['좋겠어~ 시작해봐~', '화이팅해봐~', '천천히 집중해봐~', '마음 편히 해봐~', '차근차근 해봐~'],
-        progress: ['잘하고 있어~', '절반 넘었구나~', '거의 다 왔어~', '조금만 더 힘내봐~', '끝까지 해봐~']
+        start: ['좋겠어~ 시작해봐~', '화이팅해봐~ 천천히~', '마음 편히 해봐~', '차근차근 해봐~', '호흡 잘 잡고~'],
+        halfTime: ['잘하고 있어~ 절반~', '좋구나~ 페이스 그대로~', '힘내봐~ 반 왔어~', '차근차근~ 계속~', '조금만 더 해봐~'],
+        pause: ['괜찮아~ 쉬었구나~', '준비되면 해봐~', '천천히 이어가~', '마음 편히~', '다시 시작해봐~'],
+        stopAttempt: ['아까워~ 조금만~', '힘내봐~ 버텨보자~', '거의 다 왔는데~', '끝까지 해봐~', '포기하지 마~'],
+        nearEnd: ['거의 다 왔어~', '라스트야~ 힘내~', '집중 유지해봐~', '마지막이야~', '조금만 더~'],
+        complete: ['완료~ 잘했어~', '성공이야~', '대단해~', '끝까지 했구나~', '수고했어~']
     },
     grifo: {
-        start: ['크하하! 집중도 운동이야!', '근육처럼 집중해!', '이것도 훈련이다!', '정신력도 근육이야!', '크하하! 파워 업!'],
-        progress: ['크하하! 절반 완료!', '근육처럼 꾸준히!', '정신력 훈련 중!', '마지막 세트다!', '크하하! 파이널!']
+        start: ['크하하! 집중도 운동!', '근육처럼 집중해!', '호흡 잡고 시작!', '정신력 훈련이다!', '크하하! 파워 업!'],
+        halfTime: ['크하하! 절반 완료!', '근육처럼 꾸준히!', '페이스 유지다!', '정신력 세트 반!', '크하하! 계속!'],
+        pause: ['크하하! 휴식이다!', '근육도 쉬어야지!', '준비되면 다시!', '짧은 브레이크!', '크하하! 이어가자!'],
+        stopAttempt: ['크하하! 아직이야!', '근육은 포기 안 해!', '조금만 더 버텨!', '정신력 훈련 중!', '크하하! 끝까지!'],
+        nearEnd: ['크하하! 라스트 세트!', '근육 마지막 힘!', '집중 유지다!', '정신력 파이널!', '크하하! 거의!'],
+        complete: ['크하하! 완료!', '근육처럼 완성!', '정신력 승리!', '훈련 성공!', '크하하! 끝!']
     },
     kiri: {
-        start: ['뭐... 시작해...', '그래... 해보자...', '알겠어...', '...집중해...', '뭐 어때...'],
-        progress: ['...잘하네...', '뭐... 절반...', '그래... 거의...', '...마지막...', '알겠어...']
+        start: ['뭐... 시작해...', '그래... 호흡이나...', '알겠어... 천천히...', '...집중해...', '뭐 어때...'],
+        halfTime: ['...절반...', '뭐... 괜찮네...', '그래... 페이스...', '...계속...', '알겠어... 반...'],
+        pause: ['...쉬었구나...', '뭐... 준비되면...', '그래... 천천히...', '...이어가...', '알겠어...'],
+        stopAttempt: ['...아까워...', '뭐... 조금만...', '그래... 버텨...', '...끝까지...', '알겠어... 계속...'],
+        nearEnd: ['...거의...', '뭐... 라스트...', '그래... 집중...', '...마지막...', '알겠어... 유지...'],
+        complete: ['...끝...', '뭐... 잘했어...', '그래... 완료...', '...성공...', '알겠어...']
     },
     midori: {
-        start: ['아, 아무튼... 시작해...', '그, 그래도... 해보자...', '혹, 혹시... 잘될까...', '아, 아마... 괜찮을거야...', '그, 그럼... 집중해...'],
-        progress: ['아, 아직... 괜찮네...', '그, 그래도... 절반...', '혹, 혹시... 끝날까...', '아, 아마... 거의...', '그, 그럼... 조금만...']
+        start: ['아, 아무튼... 시작...', '그, 그래도... 호흡...', '혹, 혹시... 천천히...', '아, 아마... 괜찮을거야...', '그, 그럼... 집중...'],
+        halfTime: ['아, 아직... 절반...', '그, 그래도... 페이스...', '혹, 혹시... 괜찮네...', '아, 아마... 계속...', '그, 그럼... 조금만...'],
+        pause: ['아, 아무튼... 쉬었네...', '그, 그래도... 준비되면...', '혹, 혹시... 괜찮아...', '아, 아마... 이어가...', '그, 그럼... 다시...'],
+        stopAttempt: ['아, 아직... 아까워...', '그, 그래도... 조금만...', '혹, 혹시... 버텨...', '아, 아마... 끝까지...', '그, 그럼... 계속...'],
+        nearEnd: ['아, 아직... 거의...', '그, 그래도... 라스트...', '혹, 혹시... 집중...', '아, 아마... 마지막...', '그, 그럼... 유지...'],
+        complete: ['아, 아무튼... 끝...', '그, 그래도... 잘했어...', '혹, 혹시... 완료...', '아, 아마... 성공...', '그, 그럼... 수고...']
     },
     noy: {
-        start: ['아! 빨리빨리 시작해!', '정말! 집중하라고!', '내가 말했잖아!', '빨리 해봐!', '아! 정말!'],
-        progress: ['빨리빨리! 절반!', '아! 거의 다 왔어!', '정말! 마지막이야!', '내가 말했잖아!', '빨리 끝내!']
+        start: ['아! 빨리 시작해!', '정말! 집중하라고!', '내가 말했잖아! 호흡!', '빨리 해봐!', '아! 정말! 천천히!'],
+        halfTime: ['빨리빨리! 절반!', '아! 페이스 유지!', '정말! 반 왔어!', '내가 말했잖아! 계속!', '빨리! 조금만 더!'],
+        pause: ['아! 쉬었구나!', '정말! 준비되면!', '내가 말했잖아! 다시!', '빨리 이어가!', '아! 정말! 천천히!'],
+        stopAttempt: ['아! 아까워!', '정말! 조금만 더!', '내가 말했잖아! 버텨!', '빨리! 끝까지!', '아! 정말! 포기 금지!'],
+        nearEnd: ['아! 거의!', '정말! 라스트!', '내가 말했잖아! 집중!', '빨리! 마지막!', '아! 정말! 유지!'],
+        complete: ['아! 끝!', '정말! 잘했어!', '내가 말했잖아! 완료!', '빨리! 성공!', '아! 정말! 대단해!']
     },
     obis: {
-        start: ['(고개를 끄덕임)', '(엄지를 올림)', '(살짝 미소)', '(파이팅 제스처)', '(응원하는 표정)'],
-        progress: ['(고개를 끄덕임)', '(박수를 침)', '(엄지를 올림)', '(살짝 미소)', '(파이팅 제스처)']
+        start: ['(고개를 끄덕임)', '(깊게 숨쉬는 제스처)', '(살짝 미소)', '(파이팅 제스처)', '(시작 신호)'],
+        halfTime: ['(엄지를 올림)', '(절반 표시)', '(고개를 끄덕임)', '(계속 가라는 손짓)', '(박수를 침)'],
+        pause: ['(휴식 제스처)', '(괜찮다는 손짓)', '(준비되면 신호)', '(천천히 하라는 몸짓)', '(다시 시작 제스처)'],
+        stopAttempt: ['(아쉬워하는 표정)', '(조금만 더 손짓)', '(버티라는 제스처)', '(끝까지 가라는 몸짓)', '(힘내라는 표정)'],
+        nearEnd: ['(거의 다 왔다는 손짓)', '(라스트 제스처)', '(집중하라는 표정)', '(마지막 응원)', '(파이널 신호)'],
+        complete: ['(박수를 침)', '(잘했다는 엄지)', '(완료 제스처)', '(성공 표정)', '(축하하는 몸짓)']
     },
     peng: {
-        start: ['그래. 시작해.', '할 수 있으면 해.', '알겠어.', '집중해.', '해봐.'],
-        progress: ['그래. 잘해.', '절반.', '거의.', '마지막.', '끝내.']
+        start: ['그래. 시작해.', '호흡 잡고.', '천천히.', '집중해.', '해봐.'],
+        halfTime: ['절반.', '페이스 유지.', '그래.', '계속.', '조금 더.'],
+        pause: ['쉬었구나.', '준비되면.', '천천히.', '이어가.', '괜찮아.'],
+        stopAttempt: ['아까워.', '조금만 더.', '버텨.', '끝까지.', '그래.'],
+        nearEnd: ['거의.', '라스트.', '집중.', '마지막.', '유지해.'],
+        complete: ['끝.', '잘했어.', '완료.', '성공.', '그래.']
     },
     viva: {
-        start: ['우와! 시작이다!', '좋겠다!', '재밌겠어!', '신난다!', '우와우와!'],
-        progress: ['우와! 절반!', '좋겠다!', '거의 다 왔어!', '신나는데!', '우와우와! 마지막!']
+        start: ['우와! 시작이다!', '좋겠다! 호흡!', '재밌겠어! 천천히!', '신난다!', '우와우와! 시작!'],
+        halfTime: ['우와! 절반!', '좋겠다! 페이스!', '반 왔어!', '신나는데! 계속!', '우와우와! 조금 더!'],
+        pause: ['우와! 쉬었다!', '좋겠다! 준비되면!', '괜찮아!', '신나게 이어가!', '우와우와! 다시!'],
+        stopAttempt: ['우와! 아까워!', '좋겠다! 조금만!', '버텨보자!', '신나게 끝까지!', '우와우와! 포기 금지!'],
+        nearEnd: ['우와! 거의!', '좋겠다! 라스트!', '집중해!', '신나는 마지막!', '우와우와! 유지!'],
+        complete: ['우와! 끝!', '좋겠다! 완료!', '성공이야!', '신나는 결과!', '우와우와! 잘했어!']
     }
 };
 
@@ -1496,11 +1716,11 @@ function getDefaultEncouragementMessage(characterType, context) {
     if (!messages) {
         // 알 수 없는 캐릭터의 경우 포코타 메시지 사용
         const pokotaMessages = CHARACTER_DEFAULT_MESSAGES.pokota;
-        const messageArray = context.type === 'start' ? pokotaMessages.start : pokotaMessages.progress;
+        const messageArray = pokotaMessages[context.type] || pokotaMessages.start;
         return messageArray[Math.floor(Math.random() * messageArray.length)];
     }
     
-    const messageArray = context.type === 'start' ? messages.start : messages.progress;
+    const messageArray = messages[context.type] || messages.start;
     return messageArray[Math.floor(Math.random() * messageArray.length)];
 }
 
