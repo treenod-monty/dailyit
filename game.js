@@ -522,6 +522,7 @@ function drawRandomCharacter() {
     const character = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
         type: randomCharacter.id,
+        name: randomCharacter.name,
         rarity: randomCharacter.rarity,
         acquiredAt: Date.now(),
         costume: 'default'

@@ -2414,16 +2414,22 @@ function setupCharacterGachaButton() {
         
         // 새 이벤트 리스너 추가
         document.getElementById('characterGachaPull').addEventListener('click', async function() {
+            console.log('🖱️ 캐릭터 뽑기 버튼 클릭됨');
             const points = userPoints;
+            console.log('💰 현재 포인트:', points);
             
             if (points >= 150) {
                 // 포인트가 충분하면 가차 실행
+                console.log('✅ 포인트 충분, 가차 실행');
                 if (typeof performCharacterGachaPull === 'function') {
                     await performCharacterGachaPull();
+                } else {
+                    console.error('❌ performCharacterGachaPull 함수를 찾을 수 없음');
                 }
             } else {
                 // 포인트 부족하면 토스트 표시
                 const needed = 150 - points;
+                console.log('❌ 포인트 부족:', needed, '포인트 필요');
                 showToast(`${needed} 포인트가 부족해`);
             }
         });
@@ -2562,6 +2568,10 @@ async function performCharacterGachaPull() {
     console.log('💾 사용자 데이터 저장 시작...');
     await saveUserData();
     console.log('💾 사용자 데이터 저장 완료');
+    
+    // UI 업데이트 (포인트 표시)
+    updateUI();
+    console.log('🔄 UI 업데이트 완료');
     
     // game.js의 performGachaPull 함수를 사용하되, 포인트는 메인 페이지에서 관리
     if (typeof performGachaPull === 'function') {
